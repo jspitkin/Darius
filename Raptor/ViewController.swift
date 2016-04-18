@@ -11,6 +11,9 @@ import GLKit
 class ViewController: GLKViewController {
     private let _sprite = Sprite()
     private var _lastUpdate: NSDate = NSDate()
+    private var _marsTexture: GLKTextureInfo? = nil
+    private var _pyramidTexture: GLKTextureInfo? = nil
+
     
     // look up the documention on update
     override func viewDidLoad() {
@@ -34,10 +37,20 @@ class ViewController: GLKViewController {
     // until you change that setting. OpenGL is a state machine.
     private func setup() {
         glClearColor(0.0, 1.0, 0.0, 1.0)
+        // load the textures
+        _marsTexture = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "spiral")!.CGImage!, options: nil)
+        
+        _pyramidTexture = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "pyramid")!.CGImage!, options: nil)
+        
+        _sprite.texture = _marsTexture!.name
+        _sprite.texture = _pyramidTexture!.name
     }
     
     // runs right before drawInRect is called. You can think of this as your game loop.
     func update() {
+        
         let now = NSDate()
         let elapsed = now.timeIntervalSinceDate(_lastUpdate)
         // TODO: Class GameModel.executeGameLoop(timeElapsed)
@@ -48,6 +61,12 @@ class ViewController: GLKViewController {
     // Redrawing every pixel every frame at about 60 FPS (this is adjustable)
     // This can be thought of as the draw loop.
     override func glkView(view: GLKView, drawInRect rect: CGRect) {
+        
+        // Makes the sprite square
+        let height: GLsizei = GLsizei(view.bounds.height * view.contentScaleFactor)
+        let offset: GLint = GLint((view.bounds.height - view.bounds.width) * -0.5 * view.contentScaleFactor)
+        glViewport(offset, 0, height, height)
+        
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
         _sprite.draw()
     }

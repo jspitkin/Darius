@@ -9,31 +9,51 @@
 import GLKit
 
 class Sprite {
+    // DONT USE JPEG, USE PNG (it has an alpha channel)
+    // 1024x1024 is preferred
+    // Make an animation object
+    // you only need to load a texture and can use it for multiple sprites
     static private var _program: GLuint = 0
     static private let _quad: [Float] = [
-        -0.5, -0.5,
-        0.5, -0.5,
-        -0.5, 0.5,
-        0.5, 0.5,
+        -0.5, -0.5, // bottom left
+        0.5, -0.5, // bottom right
+        -0.5, 0.5, // top left
+        0.5, 0.5, // top right
+    ]
+    
+    // 1-to-1 with the _quad coordinates
+    static private let _quadTextureCoordinates: [Float] = [
+        0.0, 1.0, // bottom left
+        1.0, 1.0, // bottom right
+        0.0, 0.0, // top left
+        1.0, 0.0, // top right
     ]
     
     private static func setup() {
         // Use NSString so we can later convert into a C style string.
+        
+        // CREATE TWO MORE UNIFORMS (SCALE AND TRANSLATE) FOR THE TEXTURES
+        // This allow us to reference different parts of a PNG to create animations
         let vertexShaderSource: NSString = "" +
             "uniform vec2 translate; \n" +
             "attribute vec2 position; \n" +
+            "attribute vec2 textureCoordinate; \n" +
             "uniform vec2 scale; \n" +
+            "varying vec2 textureCoordinateInterpolated; \n" +
             "void main() \n" +
             "{ \n" +
             "    gl_Position = vec4(position.x * scale.x + translate.x, position.y * scale.y + translate.y, 0.0, 1.0); \n" +
+        "        textureCoordinateInterpolated = textureCoordinate; \n" +
             "} \n"
         
         // TODO: Create and compile fragment shader
         let fragmentShaderSource: NSString = "" +
             "uniform highp vec4 color; \n" +
+            "uniform sampler2D textureUnit;" +
+            "varying highp vec2 textureCoordinateInterpolated; \n" +
             "void main() \n" +
             "{ \n" +
-                "   gl_FragColor = color;" +
+                "   gl_FragColor = texture2D(textureUnit, textureCoordinateInterpolated);" +
             "} \n" +
             " \n"
         
@@ -84,6 +104,7 @@ class Sprite {
         glAttachShader(Sprite._program, fragmentShader)
         // here is where we connect 0 to the actual variable
         glBindAttribLocation(_program, 0, "position")
+        glBindAttribLocation(_program, 1, "textureCoordinate")
         // link the program together (similar to compiling a shader)
         glLinkProgram(Sprite._program)
         
@@ -102,15 +123,22 @@ class Sprite {
         
         // Redefine OpenGL defaults
         // TODO: What changes will other OpenGL users in the program make?
+        glEnable(GLenum(GL_BLEND));
+        glBlendFunc(GLenum(GL_SRC_ALPHA), GLenum(GL_ONE_MINUS_SRC_ALPHA))
         glUseProgram(_program)
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, _quad)
+        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(1, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, _quadTextureCoordinates)
+
+        
     }
     
     
     var position: Vector = Vector()
     var width: Float = 1.0
     var height: Float = 1.0
+    var texture: GLuint = 0
     
     func draw() {
         if Sprite._program == 0{
@@ -120,6 +148,8 @@ class Sprite {
         glUniform2f(glGetUniformLocation(Sprite._program, "translate"), GLfloat(position.x), GLfloat(position.y))
         glUniform2f(glGetUniformLocation(Sprite._program, "scale"), width, height)
         glUniform4f(glGetUniformLocation(Sprite._program, "color"), 1.0, 0.0, 0.0 ,1.0)
+        glUniform1i(glGetUniformLocation(Sprite._program, "textureUnit"), 0)
+        glBindTexture(GLenum(GL_TEXTURE_2D), texture)
         glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
     }
 }

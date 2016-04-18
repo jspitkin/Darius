@@ -12,15 +12,6 @@ class ViewController: GLKViewController {
     private let _sprite = Sprite()
     private var _lastUpdate: NSDate = NSDate()
     
-    private var _program: GLuint = 0
-    private let _quad: [Float] = [
-        -0.5, -0.5,
-        0.5, -0.5,
-        -0.5, 0.5,
-        0.5, 0.5,
-    ]
-
-
     // look up the documention on update
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -17,21 +17,25 @@ class Sprite {
         0.5, 0.5,
     ]
     
-    var position: Vector = Vector()
-    var width: Float = 1.0
-    var height: Float = 1.0
-    //var image: UIImage
-    
     private static func setup() {
         // Use NSString so we can later convert into a C style string.
         let vertexShaderSource: NSString = "" +
-        "uniform vec2 translate; \n" +
-        "attribute vec2 position; \n" +
-        "uniform vec2 scale; \n"
-        "void main() \n" +
-        "{ \n" +
-        "    gl_Position = vec4(position.x + translate.x, position.y + translate.y, 0.0, 1.0); \n" +
-        "} \n"
+            "uniform vec2 translate; \n" +
+            "attribute vec2 position; \n" +
+            "uniform vec2 scale; \n" +
+            "void main() \n" +
+            "{ \n" +
+            "    gl_Position = vec4(position.x * scale.x + translate.x, position.y * scale.y + translate.y, 0.0, 1.0); \n" +
+            "} \n"
+        
+        // TODO: Create and compile fragment shader
+        let fragmentShaderSource: NSString = "" +
+            "uniform highp vec4 color; \n" +
+            "void main() \n" +
+            "{ \n" +
+                "   gl_FragColor = color;" +
+            "} \n" +
+            " \n"
         
         // Create and compile vertex shader
         let vertexShader: GLuint = glCreateShader(GLenum(GL_VERTEX_SHADER))
@@ -53,14 +57,6 @@ class Sprite {
             // TODO: Prevent drawing
         }
         
-        // TODO: Create and compile fragment shader
-        let fragmentShaderSource: NSString = "" +
-            "void main() \n" +
-            "{ \n" +
-            "   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);" +
-            "} \n" +
-        " \n"
-        
         // Create and compile fragment shader
         let fragmentShader: GLuint = glCreateShader(GLenum(GL_FRAGMENT_SHADER))
         var fragmentShaderSourceUTF8 = fragmentShaderSource.UTF8String // returns an UnsafePointer object
@@ -81,34 +77,40 @@ class Sprite {
         }
         
         // Link shaders into a full program
-        _program = glCreateProgram()
+        Sprite._program = glCreateProgram()
         // now we have to attach the two shaders: the vertex and fragment shader
         // you must attach exactly one vertex and one fragment shader
-        glAttachShader(_program, vertexShader)
-        glAttachShader(_program, fragmentShader)
+        glAttachShader(Sprite._program, vertexShader)
+        glAttachShader(Sprite._program, fragmentShader)
         // here is where we connect 0 to the actual variable
         glBindAttribLocation(_program, 0, "position")
         // link the program together (similar to compiling a shader)
-        glLinkProgram(_program)
+        glLinkProgram(Sprite._program)
         
         // check if everything went accordingly
         var programLinkStatus: GLint = GL_FALSE
-        glGetProgramiv(_program, GLenum(GL_LINK_STATUS), &programLinkStatus)
+        glGetProgramiv(Sprite._program, GLenum(GL_LINK_STATUS), &programLinkStatus)
         if (programLinkStatus == GL_FALSE) {
             var programCompileLogLength: GLint = 0
-            glGetProgramiv(_program, GLenum(GL_INFO_LOG_LENGTH), &programCompileLogLength)
+            glGetProgramiv(Sprite._program, GLenum(GL_INFO_LOG_LENGTH), &programCompileLogLength)
             let programCompileLog = UnsafeMutablePointer<GLchar>.alloc(Int(programCompileLogLength))
-            glGetProgramInfoLog(_program, programCompileLogLength, nil, programCompileLog)
+            glGetProgramInfoLog(Sprite._program, programCompileLogLength, nil, programCompileLog)
             let programCompileLogString: NSString? = NSString(UTF8String: programCompileLog)
             print("Program linking error: \(programCompileLogString)")
             // TODO: Exit with error UI
         }
         
+        // Redefine OpenGL defaults
         // TODO: What changes will other OpenGL users in the program make?
         glUseProgram(_program)
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, _quad)
     }
+    
+    
+    var position: Vector = Vector()
+    var width: Float = 1.0
+    var height: Float = 1.0
     
     func draw() {
         if Sprite._program == 0{

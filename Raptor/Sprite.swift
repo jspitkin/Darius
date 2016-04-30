@@ -9,6 +9,25 @@
 import GLKit
 
 class Sprite {
+    private var _isEnemy: Bool
+    private var _isPlayer: Bool
+    private var _isBullet: Bool
+    
+    var isEnemy: Bool {
+        get { return _isEnemy }
+        set { _isEnemy = newValue }
+    }
+    
+    var isPlayer: Bool {
+        get { return _isPlayer }
+        set { _isPlayer = newValue }
+    }
+    
+    var isBullet: Bool {
+        get { return _isBullet }
+        set { _isBullet = newValue }
+    }
+    
     // DONT USE JPEG, USE PNG (it has an alpha channel)
     // 1024x1024 is preferred
     // Make an animation object
@@ -28,6 +47,12 @@ class Sprite {
         0.0, 0.0, // top left
         1.0, 0.0, // top right
     ]
+    
+    init(isPlayer: Bool, isEnemy: Bool, isBullet: Bool) {
+        _isEnemy = isEnemy
+        _isPlayer = isPlayer
+        _isBullet = isBullet
+    }
     
     private static func setup() {
         // Use NSString so we can later convert into a C style string.

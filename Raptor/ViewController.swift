@@ -9,10 +9,13 @@
 import GLKit
 
 class ViewController: GLKViewController {
+    private var _sprites = [Sprite]()
     private let _sprite = Sprite()
+    private let _sprite2 = Sprite()
     private var _lastUpdate: NSDate = NSDate()
     private var _marsTexture: GLKTextureInfo? = nil
     private var _pyramidTexture: GLKTextureInfo? = nil
+    private var _circleTexture: GLKTextureInfo? = nil
 
     
     // look up the documention on update
@@ -44,8 +47,20 @@ class ViewController: GLKViewController {
         _pyramidTexture = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "pyramid")!.CGImage!, options: nil)
         
-        _sprite.texture = _marsTexture!.name
-        _sprite.texture = _pyramidTexture!.name
+        _circleTexture = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "circle")!.CGImage!, options: nil)
+        
+        _sprite2.texture = _circleTexture!.name
+        _sprite2.width = 0.25
+        _sprite2.height = 0.25
+        _sprite2.position.y = -0.5
+        
+        //_sprite2.position.x = -1
+        //_sprite2.position.y = -1
+        _sprite.texture = _circleTexture!.name
+        _sprite.width = 0.5
+        _sprite.height = 0.5
+        _sprite.position.y = 1
     }
     
     // runs right before drawInRect is called. You can think of this as your game loop.
@@ -54,7 +69,23 @@ class ViewController: GLKViewController {
         let now = NSDate()
         let elapsed = now.timeIntervalSinceDate(_lastUpdate)
         // TODO: Class GameModel.executeGameLoop(timeElapsed)
-        _sprite.position.x =  Double(elapsed * 0.25)
+        _sprite.position.y = 0 + Double(elapsed * -0.1)
+        //print(_sprite.position.y)
+        // Collision detection
+        detectCollisions()
+    }
+    
+    func detectCollisions() {
+        // (x2-x1)^2 + (y1-y2)^2 <= (r1+r2)^2
+        let x = (_sprite2.position.x - _sprite.position.x) * (_sprite2.position.x - _sprite.position.x)
+        let y = (_sprite.position.y - _sprite2.position.y) * (_sprite.position.y - _sprite2.position.y)
+        let r = ((_sprite.height/2.0 + _sprite2.height/2.0) * (_sprite.height/2.0 + _sprite2.height/2.0))
+        print("x :\(x) y:\(y) r:\(r)")
+        if x + y <= Double(r)
+        {
+            print("got it")
+        }
+        
     }
     
     // Called everytime GLK should refresh it's view
@@ -69,6 +100,7 @@ class ViewController: GLKViewController {
         
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
         _sprite.draw()
+        _sprite2.draw()
     }
 }
 

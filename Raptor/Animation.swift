@@ -43,24 +43,32 @@ class Animation {
     func updateSprite() {
         if currentFrame == framesPerAnimation {
             currentFrame = 0;
-        if curRow == rows {
-            curRow = 1
-            frameX = 15
-            curCol++;
-            frameY = frameY + 128;
-        } else {
-            frameX = frameX + 128;
-            curRow++;
-        }
+            if curRow == rows {
+                curRow = 1
+                frameX = 15
+                curCol++;
+                frameY = frameY + 128;
+            } else {
+                frameX = frameX + 128;
+                curRow++;
+            }
         
-        if curCol == columns {
-            curCol = 1
-            frameY = 10
-        }
+            if curCol == columns {
+                curCol = 1
+                frameY = 10
+            }
         
         }
         else{
             currentFrame++;
+        }
+    }
+    
+    func updateBackground() {
+        if (frameY > textureY - frameHeight) {
+            frameY = 0
+        } else {
+            frameY += 5
         }
     }
     

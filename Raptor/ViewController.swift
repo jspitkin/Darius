@@ -10,11 +10,13 @@ import GLKit
 
 class ViewController: GLKViewController {
     private var _sprites = [Sprite]()
+    private var _backgroundSprite = Sprite()
     private var _lastUpdate: NSDate = NSDate()
     
     private var _circleTexture: GLKTextureInfo? = nil
     private var _ship: GLKTextureInfo? = nil
     private var _asteroid: GLKTextureInfo? = nil
+    private var _background: GLKTextureInfo? = nil
 
     
     // look up the documention on update
@@ -38,7 +40,7 @@ class ViewController: GLKViewController {
     // you can set a setting once and openGL will continue to use that setting
     // until you change that setting. OpenGL is a state machine.
     private func setup() {
-        glClearColor(0.0, 1.0, 0.0, 1.0)
+        glClearColor(0.0, 0.0, 0.0, 1.0)
         // load the textures
         _circleTexture = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "circle")!.CGImage!, options: nil)
@@ -49,6 +51,11 @@ class ViewController: GLKViewController {
         _asteroid = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "asteroid")!.CGImage!, options: nil)
         
+        _background = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
+        
+        constructBackgroundSprite()
+        
         let sprite: Sprite = Sprite()
         sprite.animation.texture = _asteroid!.name
         sprite.animation.textureX = 1024
@@ -56,16 +63,16 @@ class ViewController: GLKViewController {
         sprite.animation.frameHeight = 100
         sprite.animation.frameWidth = 90
         sprite.animation.rows = 8
-        sprite.animation.columns = 4
+        sprite.animation.columns = 8
         sprite.animation.frameX = 15
         sprite.animation.frameY = 10
-        sprite.animation.framesPerAnimation = 5
+        sprite.animation.framesPerAnimation = 3
         sprite.width = 0.25
         sprite.height = 0.25
         sprite.initialPosition.y = 1
         sprite.initialPosition.x = 0
         sprite.velocity.x = 0.0;
-        sprite.velocity.y = 0.3;
+        sprite.velocity.y = -0.3;
         sprite.isEnemy = true
         
         _sprites.append(sprite)
@@ -162,9 +169,31 @@ class ViewController: GLKViewController {
         
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
         
+        _backgroundSprite.drawBackground()
+        
         for sprite in _sprites {
             sprite.draw()
         }
+    }
+    
+    func constructBackgroundSprite() {
+        
+        _backgroundSprite.animation.texture = _background!.name
+        _backgroundSprite.animation.textureX = 1080
+        _backgroundSprite.animation.textureY = 1920
+        _backgroundSprite.animation.frameHeight = 500
+        _backgroundSprite.animation.frameWidth = 500
+        _backgroundSprite.animation.rows = 1
+        _backgroundSprite.animation.columns = 4
+        _backgroundSprite.animation.frameX = 0
+        _backgroundSprite.animation.frameY = 0
+        _backgroundSprite.animation.framesPerAnimation = 1
+        _backgroundSprite.width = 1.3
+        _backgroundSprite.height = 2
+        _backgroundSprite.initialPosition.y = 0
+        _backgroundSprite.initialPosition.x = 0
+        _backgroundSprite.velocity.x = 0.0;
+        _backgroundSprite.velocity.y = 0.0;
     }
 }
 

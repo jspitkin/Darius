@@ -9,25 +9,6 @@
 import GLKit
 
 class Sprite {
-    private var _isEnemy: Bool
-    private var _isPlayer: Bool
-    private var _isBullet: Bool
-    
-    var isEnemy: Bool {
-        get { return _isEnemy }
-        set { _isEnemy = newValue }
-    }
-    
-    var isPlayer: Bool {
-        get { return _isPlayer }
-        set { _isPlayer = newValue }
-    }
-    
-    var isBullet: Bool {
-        get { return _isBullet }
-        set { _isBullet = newValue }
-    }
-    
     // DONT USE JPEG, USE PNG (it has an alpha channel)
     // 1024x1024 is preferred
     // Make an animation object
@@ -48,12 +29,6 @@ class Sprite {
         1.0, 0.0, // top right
     ]
     
-    init(isPlayer: Bool, isEnemy: Bool, isBullet: Bool) {
-        _isEnemy = isEnemy
-        _isPlayer = isPlayer
-        _isBullet = isBullet
-    }
-    
     private static func setup() {
         // Use NSString so we can later convert into a C style string.
         
@@ -62,13 +37,15 @@ class Sprite {
         let vertexShaderSource: NSString = "" +
             "uniform vec2 translate; \n" +
             "attribute vec2 position; \n" +
+            "uniform vec2 textureTranslate; \n" +
+            "uniform vec2 textureScale; \n " +
             "attribute vec2 textureCoordinate; \n" +
             "uniform vec2 scale; \n" +
             "varying vec2 textureCoordinateInterpolated; \n" +
             "void main() \n" +
             "{ \n" +
             "    gl_Position = vec4(position.x * scale.x + translate.x, position.y * scale.y + translate.y, 0.0, 1.0); \n" +
-        "        textureCoordinateInterpolated = textureCoordinate; \n" +
+        "        textureCoordinateInterpolated = vec2(textureCoordinate.x * textureScale.x + textureTranslate.x, textureCoordinate.y * textureScale.y + textureTranslate.y); \n" +
             "} \n"
         
         // TODO: Create and compile fragment shader
@@ -155,27 +132,40 @@ class Sprite {
         glVertexAttribPointer(0, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, _quad)
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(1, 2, GLenum(GL_FLOAT), GLboolean(GL_FALSE), 0, _quadTextureCoordinates)
-
         
     }
     
     
     var position: Vector = Vector()
+    var initialPosition: Vector = Vector()
+    var velocity: Vector = Vector()
     var width: Float = 1.0
     var height: Float = 1.0
-    var texture: GLuint = 0
+    var isEnemy: Bool = false
+    var isPlayer: Bool = false
+    var isPlayerBullet: Bool = false
+    var isEnemyBullet: Bool = false
+    
+    var animation: Animation = Animation()
+    
     
     func draw() {
         if Sprite._program == 0{
             Sprite.setup()
         }
         
+        
         glUniform2f(glGetUniformLocation(Sprite._program, "translate"), GLfloat(position.x), GLfloat(position.y))
         glUniform2f(glGetUniformLocation(Sprite._program, "scale"), width, height)
         glUniform4f(glGetUniformLocation(Sprite._program, "color"), 1.0, 0.0, 0.0 ,1.0)
         glUniform1i(glGetUniformLocation(Sprite._program, "textureUnit"), 0)
-        glBindTexture(GLenum(GL_TEXTURE_2D), texture)
+        glUniform2f(glGetUniformLocation(Sprite._program, "textureTranslate"), GLfloat(animation.getFrameX()), GLfloat(animation.getFrameY()))
+        glUniform2f(glGetUniformLocation(Sprite._program, "textureScale"), GLfloat(animation.getFrameWidth()), GLfloat(animation.getFrameHeight()))
+        glBindTexture(GLenum(GL_TEXTURE_2D), animation.texture)
         glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
+        
+        animation.updateSprite()
+        
     }
 }
 

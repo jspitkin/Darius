@@ -12,6 +12,14 @@ class ViewController: GLKViewController {
     private var _model = Model()
     private var _sprites = [Sprite]()
     private var _backgroundSprite = Sprite()
+    private var _dpadSprite = Sprite()
+    private var _playerShip = Sprite()
+    
+    private var _dpad: GLKTextureInfo? = nil
+    private var _dpadUp: GLKTextureInfo? = nil
+    private var _dpadRight: GLKTextureInfo? = nil
+    private var _dpadDown: GLKTextureInfo? = nil
+    private var _dpadLeft: GLKTextureInfo? = nil
     
     private var _circleTexture: GLKTextureInfo? = nil
     private var _ship: GLKTextureInfo? = nil
@@ -55,6 +63,9 @@ class ViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
         
         constructBackgroundSprite()
+        constructPlayerShipSprite()
+        constructDirectionalPad()
+        constructFireButton()
 
     }
     
@@ -74,10 +85,16 @@ class ViewController: GLKViewController {
     
     func updateSpritesLocations() {
         for sprite in _sprites {
-            let now = NSDate()
-            let elapsed = now.timeIntervalSinceDate(sprite.animation.lastUpdate)
-            sprite.position.x = sprite.initialPosition.x + Double(elapsed * sprite.velocity.x)
-            sprite.position.y = sprite.initialPosition.y + Double(elapsed * sprite.velocity.y)
+            if sprite !== _playerShip {
+                let now = NSDate()
+                let elapsed = now.timeIntervalSinceDate(sprite.animation.lastUpdate)
+                sprite.position.x = sprite.initialPosition.x + Double(elapsed * sprite.velocity.x)
+                sprite.position.y = sprite.initialPosition.y + Double(elapsed * sprite.velocity.y)
+            }
+            else {
+                sprite.position.x = sprite.position.x + sprite.velocity.x
+                sprite.position.y = sprite.position.y + sprite.velocity.y
+            }
         }
     }
     
@@ -113,7 +130,7 @@ class ViewController: GLKViewController {
         
         // player and enemy collision
         if sprite.isPlayer && spriteTwo.isEnemy || sprite.isPlayer && sprite.isPlayerBullet {
-            print("Player has collided with an enemy!")
+            //print("Player has collided with an enemy!")
         }
         
         // player and enemy bullet collision
@@ -145,6 +162,114 @@ class ViewController: GLKViewController {
         for sprite in _sprites {
             sprite.draw()
         }
+        
+        _dpadSprite.drawControls()
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        super.touchesBegan(touches, withEvent: event)
+        let touch: UITouch = touches.first!
+        let touchPoint: CGPoint = touch.locationInView(self.view)
+        
+        if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
+            shipUp()
+        }
+        else if touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
+            shipRight()
+        }
+        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
+            shipDown()
+        }
+        else if touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
+            shipLeft()
+        }
+        else {
+            shipStop()
+        }
+        
+    }
+    
+    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        super.touchesBegan(touches, withEvent: event)
+        let touch: UITouch = touches.first!
+        let touchPoint: CGPoint = touch.locationInView(self.view)
+        
+        if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
+            shipUp()
+        }
+        else if touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
+            shipRight()
+        }
+        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
+            shipDown()
+        }
+        else if touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
+            shipLeft()
+        }
+        else {
+            shipStop()
+        }
+    }
+    
+    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        _dpadSprite.animation.texture = _dpad!.name
+        shipStop()
+    }
+    
+    func shipStop() {
+        print("stop")
+        _dpadSprite.animation.texture = _dpad!.name
+        _playerShip.animation.frameX = 39
+        _playerShip.animation.frameY = 0
+        _playerShip.animation.frameHeight = 36
+        _playerShip.animation.frameWidth = 39
+        _playerShip.velocity.x = 0.0;
+        _playerShip.velocity.y = 0.0;
+    }
+    
+    func shipUp() {
+        print("up")
+        _dpadSprite.animation.texture = _dpadUp!.name
+        _playerShip.animation.frameX = 39
+        _playerShip.animation.frameY = 39
+        _playerShip.animation.frameHeight = 45
+        _playerShip.animation.frameWidth = 39
+        _playerShip.velocity.x = 0.0;
+        _playerShip.velocity.y = 0.05;
+    }
+    
+    func shipRight() {
+        print("right")
+        _dpadSprite.animation.texture = _dpadRight!.name
+        _playerShip.animation.frameX = 86
+        _playerShip.animation.frameY = 86
+        _playerShip.animation.frameHeight = 45
+        _playerShip.animation.frameWidth = 39
+        _playerShip.velocity.x = 0.05;
+        _playerShip.velocity.y = 0.0;
+    }
+    
+    func shipDown() {
+        print("down")
+        _dpadSprite.animation.texture = _dpadDown!.name
+        _playerShip.animation.frameX = 39
+        _playerShip.animation.frameY = 0
+        _playerShip.animation.frameHeight = 36
+        _playerShip.animation.frameWidth = 39
+        _playerShip.velocity.x = 0.0;
+        _playerShip.velocity.y = -0.05;
+    }
+    
+    func shipLeft() {
+        print("left")
+        _dpadSprite.animation.texture = _dpadLeft!.name
+        _playerShip.animation.frameX = 2
+        _playerShip.animation.frameY = 86
+        _playerShip.animation.frameHeight = 45
+        _playerShip.animation.frameWidth = 35
+
+        _playerShip.velocity.x = -0.05;
+        _playerShip.velocity.y = 0.0;
     }
     
     func spawnRandomAsteroids() {
@@ -155,22 +280,22 @@ class ViewController: GLKViewController {
             sprite.animation.textureX = 1024
             sprite.animation.textureY = 1024
             sprite.animation.frameHeight = 100
-            sprite.animation.frameWidth = 90
+            sprite.animation.frameWidth = 100
             sprite.animation.rows = 8
             sprite.animation.columns = 8
             sprite.animation.frameX = 15
             sprite.animation.frameY = 10
             sprite.animation.framesPerAnimation = 1
-            sprite.width = 0.25
-            sprite.height = 0.25
+            let asteroidSize = (drand48() * (0.5 - 0.15)) + 0.15
+            sprite.width = Float(asteroidSize)
+            sprite.height = Float(asteroidSize)
             sprite.initialPosition.y = 1.1
             sprite.initialPosition.x = (drand48() * 2) - 1
-            print(sprite.initialPosition.x)
             sprite.position.y = sprite.initialPosition.y
             sprite.position.x = sprite.initialPosition.x
             sprite.velocity.x = 0.0;
-            sprite.velocity.y = -0.4;
-            sprite.isEnemy = true
+            sprite.velocity.y = -1 * ((drand48() * (0.5 - 0.15)) + 0.15);
+            sprite.isPlayer = true
             
             _sprites.append(sprite)
         }
@@ -189,6 +314,63 @@ class ViewController: GLKViewController {
         _backgroundSprite.animation.frameY = 0
         _backgroundSprite.width = 1.3
         _backgroundSprite.height = 2
+    }
+    
+    func constructPlayerShipSprite() {
+        _playerShip.animation.texture = _ship!.name
+        _playerShip.animation.textureX = 116
+        _playerShip.animation.textureY = 345
+        _playerShip.animation.frameHeight = 36
+        _playerShip.animation.frameWidth = 39
+        _playerShip.animation.rows = 0
+        _playerShip.animation.columns = 0
+        _playerShip.animation.frameX = 39
+        _playerShip.animation.frameY = 0
+        _playerShip.animation.framesPerAnimation = 1
+        _playerShip.width = 0.15
+        _playerShip.height = 0.15
+        _playerShip.initialPosition.y = -0.8
+        _playerShip.initialPosition.x = 0
+        _playerShip.position.y = _playerShip.initialPosition.y
+        _playerShip.position.x = _playerShip.initialPosition.x
+        _playerShip.velocity.x = 0.0;
+        _playerShip.velocity.y = 0.0;
+        _playerShip.isEnemy = true
+        
+        _sprites.append(_playerShip)
+    }
+    
+    func constructDirectionalPad() {
+        _dpad = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad")!.CGImage!, options: nil)
+        _dpadUp = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_up")!.CGImage!, options: nil)
+        _dpadRight = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_right")!.CGImage!, options: nil)
+        _dpadDown = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_down")!.CGImage!, options: nil)
+        _dpadLeft = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_left")!.CGImage!, options: nil)
+        
+        _dpadSprite.animation.texture = _dpad!.name
+        _dpadSprite.animation.textureX = 280
+        _dpadSprite.animation.textureY = 280
+        _dpadSprite.animation.frameHeight = 280
+        _dpadSprite.animation.frameWidth = 280
+        _dpadSprite.animation.rows = 1
+        _dpadSprite.animation.columns = 1
+        _dpadSprite.animation.frameX = 0
+        _dpadSprite.animation.frameY = 0
+        _dpadSprite.width = 0.3
+        _dpadSprite.height = 0.3
+        _dpadSprite.position.x = 0.37
+        _dpadSprite.position.y = -0.8
+        
+        _dpadSprite.drawControls()
+    }
+    
+    func constructFireButton() {
+        
     }
 }
 

@@ -43,6 +43,10 @@ class Animation {
     }
     
     func updateSprite() {
+        if rows == 0 && columns == 0 {
+            return;
+        }
+        
         if currentFrame == framesPerAnimation {
             currentFrame = 0;
             if curRow == rows {

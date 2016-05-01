@@ -184,6 +184,21 @@ class Sprite {
         animation.updateBackground()
     }
     
+    func drawControls() {
+        if Sprite._program == 0{
+            Sprite.setup()
+        }
+        
+        glUniform2f(glGetUniformLocation(Sprite._program, "translate"), GLfloat(position.x), GLfloat(position.y))
+        glUniform2f(glGetUniformLocation(Sprite._program, "scale"), width, height)
+        glUniform4f(glGetUniformLocation(Sprite._program, "color"), 1.0, 0.0, 0.0 ,1.0)
+        glUniform1i(glGetUniformLocation(Sprite._program, "textureUnit"), 0)
+        glUniform2f(glGetUniformLocation(Sprite._program, "textureTranslate"), GLfloat(animation.getFrameX()), GLfloat(animation.getFrameY()))
+        glUniform2f(glGetUniformLocation(Sprite._program, "textureScale"), GLfloat(animation.getFrameWidth()), GLfloat(animation.getFrameHeight()))
+        glBindTexture(GLenum(GL_TEXTURE_2D), animation.texture)
+        glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
+    }
+    
 }
 
 // Model Objects

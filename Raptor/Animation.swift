@@ -57,7 +57,6 @@ class Animation {
                 curCol = 1
                 frameY = 10
             }
-        
         }
         else{
             currentFrame++;
@@ -71,7 +70,4 @@ class Animation {
             frameY += 5
         }
     }
-    
-    // 1024x1024 sprite sheet. trying to get a 320x400 image out. at the offset (200,100)
-    //Frame.X = 200 / 1024; Frame.Y = 100 / 1024; Frame.Width = 320 / 1024; Frame.Height = 400 / 1024;
 }

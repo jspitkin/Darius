@@ -66,7 +66,7 @@ class ViewController: GLKViewController {
         sprite.animation.columns = 8
         sprite.animation.frameX = 15
         sprite.animation.frameY = 10
-        sprite.animation.framesPerAnimation = 3
+        sprite.animation.framesPerAnimation = 1
         sprite.width = 0.25
         sprite.height = 0.25
         sprite.initialPosition.y = 1
@@ -76,7 +76,6 @@ class ViewController: GLKViewController {
         sprite.isEnemy = true
         
         _sprites.append(sprite)
-        
         
         let sprite2: Sprite = Sprite()
         sprite2.animation.texture = _circleTexture!.name
@@ -171,29 +170,27 @@ class ViewController: GLKViewController {
         
         _backgroundSprite.drawBackground()
         
+        for (index, sprite) in _sprites.enumerate().reverse() {
+            if sprite.position.x > 1.2 || sprite.position.x < -1.2 || sprite.position.y > 1.2 || sprite.position.y < -1.2 {
+                _sprites.removeAtIndex(index)
+            }
+        }
+        
         for sprite in _sprites {
             sprite.draw()
         }
     }
     
     func constructBackgroundSprite() {
-        
         _backgroundSprite.animation.texture = _background!.name
         _backgroundSprite.animation.textureX = 1080
         _backgroundSprite.animation.textureY = 1920
         _backgroundSprite.animation.frameHeight = 500
         _backgroundSprite.animation.frameWidth = 500
-        _backgroundSprite.animation.rows = 1
-        _backgroundSprite.animation.columns = 4
         _backgroundSprite.animation.frameX = 0
         _backgroundSprite.animation.frameY = 0
-        _backgroundSprite.animation.framesPerAnimation = 1
         _backgroundSprite.width = 1.3
         _backgroundSprite.height = 2
-        _backgroundSprite.initialPosition.y = 0
-        _backgroundSprite.initialPosition.x = 0
-        _backgroundSprite.velocity.x = 0.0;
-        _backgroundSprite.velocity.y = 0.0;
     }
 }
 

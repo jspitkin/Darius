@@ -9,9 +9,9 @@
 import GLKit
 
 class ViewController: GLKViewController {
+    private var _model = Model()
     private var _sprites = [Sprite]()
     private var _backgroundSprite = Sprite()
-    private var _lastUpdate: NSDate = NSDate()
     
     private var _circleTexture: GLKTextureInfo? = nil
     private var _ship: GLKTextureInfo? = nil
@@ -55,61 +55,27 @@ class ViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
         
         constructBackgroundSprite()
-        
-        let sprite: Sprite = Sprite()
-        sprite.animation.texture = _asteroid!.name
-        sprite.animation.textureX = 1024
-        sprite.animation.textureY = 1024
-        sprite.animation.frameHeight = 100
-        sprite.animation.frameWidth = 90
-        sprite.animation.rows = 8
-        sprite.animation.columns = 8
-        sprite.animation.frameX = 15
-        sprite.animation.frameY = 10
-        sprite.animation.framesPerAnimation = 1
-        sprite.width = 0.25
-        sprite.height = 0.25
-        sprite.initialPosition.y = 1
-        sprite.initialPosition.x = 0
-        sprite.velocity.x = 0.0;
-        sprite.velocity.y = -0.3;
-        sprite.isEnemy = true
-        
-        _sprites.append(sprite)
-        
-        let sprite2: Sprite = Sprite()
-        sprite2.animation.texture = _circleTexture!.name
-        sprite2.animation.textureX = 1024
-        sprite2.animation.textureY = 1024
-        sprite2.animation.frameHeight = 1024
-        sprite2.animation.frameWidth = 1024
-        sprite2.animation.frameX = 0
-        sprite2.animation.frameY = 0
-        sprite2.width = 0.05
-        sprite2.height = 0.05
-        sprite2.initialPosition.y = 1
-        sprite2.velocity.x = 0
-        sprite2.velocity.y = -0.5
-        sprite2.isPlayerBullet = true
-        
-       // _sprites.append(sprite2)
+
     }
     
     // runs right before drawInRect is called. You can think of this as your game loop.
     func update() {
         
-        let now = NSDate()
-        let elapsed = now.timeIntervalSinceDate(_lastUpdate)
-        
         // Update sprite's locations
-        updateSpritesLocations(elapsed)
+        updateSpritesLocations()
        
         // Collision detection
         detectCollisions()
+        
+        if _model.level == 1 {
+            spawnRandomAsteroids()
+        }
     }
     
-    func updateSpritesLocations(elapsed: Double) {
+    func updateSpritesLocations() {
         for sprite in _sprites {
+            let now = NSDate()
+            let elapsed = now.timeIntervalSinceDate(sprite.animation.lastUpdate)
             sprite.position.x = sprite.initialPosition.x + Double(elapsed * sprite.velocity.x)
             sprite.position.y = sprite.initialPosition.y + Double(elapsed * sprite.velocity.y)
         }
@@ -171,13 +137,45 @@ class ViewController: GLKViewController {
         _backgroundSprite.drawBackground()
         
         for (index, sprite) in _sprites.enumerate().reverse() {
-            if sprite.position.x > 1.2 || sprite.position.x < -1.2 || sprite.position.y > 1.2 || sprite.position.y < -1.2 {
-                _sprites.removeAtIndex(index)
+            if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
+              _sprites.removeAtIndex(index)
             }
         }
         
         for sprite in _sprites {
             sprite.draw()
+        }
+    }
+    
+    func spawnRandomAsteroids() {
+        if _model.currentAsteroidFrequency == _model.asteroidFrequency {
+            _model.currentAsteroidFrequency = 0
+            let sprite: Sprite = Sprite()
+            sprite.animation.texture = _asteroid!.name
+            sprite.animation.textureX = 1024
+            sprite.animation.textureY = 1024
+            sprite.animation.frameHeight = 100
+            sprite.animation.frameWidth = 90
+            sprite.animation.rows = 8
+            sprite.animation.columns = 8
+            sprite.animation.frameX = 15
+            sprite.animation.frameY = 10
+            sprite.animation.framesPerAnimation = 1
+            sprite.width = 0.25
+            sprite.height = 0.25
+            sprite.initialPosition.y = 1.1
+            sprite.initialPosition.x = (drand48() * 2) - 1
+            print(sprite.initialPosition.x)
+            sprite.position.y = sprite.initialPosition.y
+            sprite.position.x = sprite.initialPosition.x
+            sprite.velocity.x = 0.0;
+            sprite.velocity.y = -0.4;
+            sprite.isEnemy = true
+            
+            _sprites.append(sprite)
+        }
+        else {
+            _model.currentAsteroidFrequency++;
         }
     }
     

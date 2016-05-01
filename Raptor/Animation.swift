@@ -24,6 +24,8 @@ class Animation {
     var framesPerAnimation: Int = 0
     var currentFrame: Int = 0
     
+    var lastUpdate: NSDate = NSDate()
+    
     func getFrameX() -> Double {
         return frameX / textureX;
     }
@@ -64,10 +66,10 @@ class Animation {
     }
     
     func updateBackground() {
-        if (frameY > textureY - frameHeight) {
-            frameY = 0
+        if (frameY < 500) {
+            frameY = 1400
         } else {
-            frameY += 5
+            frameY -= 5
         }
     }
 }

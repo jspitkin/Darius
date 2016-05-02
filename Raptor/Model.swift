@@ -18,6 +18,7 @@ class Model {
     var playerFiring: Bool = false
     
     var playerHealth: Int = 5
+    var playerScore: Int = 0
     
 }
 

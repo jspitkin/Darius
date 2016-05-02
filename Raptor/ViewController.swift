@@ -17,6 +17,10 @@ class ViewController: GLKViewController {
     private var _playerShip = Sprite()
     private var _healthBarSprite = Sprite()
     private var _gameoverSprite = Sprite()
+    private var _oneNumberSprite = Sprite()
+    private var _twoNumberSprite = Sprite()
+    private var _threeNumberSprite = Sprite()
+    private var _fourNumberSprite = Sprite()
     
     private var _dpad: GLKTextureInfo? = nil
     private var _dpadUp: GLKTextureInfo? = nil
@@ -31,6 +35,7 @@ class ViewController: GLKViewController {
     private var _explosion: GLKTextureInfo? = nil
     private var _healthBar: GLKTextureInfo? = nil
     private var _gameover: GLKTextureInfo? = nil
+    private var _numbers: GLKTextureInfo? = nil
 
     
     // look up the documention on update
@@ -68,6 +73,7 @@ class ViewController: GLKViewController {
         constructDirectionalPad()
         constructFireButton()
         constructHealthBar()
+        constructScoreBar()
 
     }
     
@@ -98,6 +104,8 @@ class ViewController: GLKViewController {
             _playerShip.position.x = -3
             _playerShip.position.y = -3
         }
+        
+        updateScore()
     }
     
     func updateSpritesLocations() {
@@ -135,6 +143,7 @@ class ViewController: GLKViewController {
     func collision(sprite: Sprite, spriteTwo: Sprite) {
         // player bullet and enemy collision
         if sprite.isPlayerBullet && spriteTwo.isEnemy || sprite.isEnemy && sprite.isPlayerBullet {
+            _model.playerScore++
             if sprite.isEnemy {
                 spriteTwo.remove = true
                 asteroidHit(sprite)
@@ -294,6 +303,10 @@ class ViewController: GLKViewController {
         if _model.playerHealth == 0 {
             _gameoverSprite.drawControls()
         }
+        _oneNumberSprite.drawControls()
+        _twoNumberSprite.drawControls()
+        _threeNumberSprite.drawControls()
+        _fourNumberSprite.drawControls()
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -606,6 +619,107 @@ class ViewController: GLKViewController {
             _playerShip.velocity.x = 0
             _playerShip.position.x = 0.45
         }
+    }
+    
+    func constructScoreBar() {
+        _numbers = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
+        _oneNumberSprite.animation.texture = _numbers!.name
+        _twoNumberSprite.animation.texture = _numbers!.name
+        _threeNumberSprite.animation.texture = _numbers!.name
+        _fourNumberSprite.animation.texture = _numbers!.name
+        
+        _oneNumberSprite.animation.textureX = 360
+        _oneNumberSprite.animation.textureY = 36
+        _oneNumberSprite.animation.frameX = 2
+        _oneNumberSprite.animation.frameY = 6
+        _oneNumberSprite.width = 0.1
+        _oneNumberSprite.height = 0.1
+        _oneNumberSprite.animation.frameWidth = 34
+        _oneNumberSprite.animation.frameHeight = 27
+        _oneNumberSprite.position.x = -3.0
+        _oneNumberSprite.position.y = 0.87
+        
+        _twoNumberSprite.animation.textureX = 360
+        _twoNumberSprite.animation.textureY = 36
+        _twoNumberSprite.animation.frameX = 2
+        _twoNumberSprite.animation.frameY = 6
+        _twoNumberSprite.width = 0.1
+        _twoNumberSprite.height = 0.1
+        _twoNumberSprite.animation.frameWidth = 34
+        _twoNumberSprite.animation.frameHeight = 27
+        _twoNumberSprite.position.x = -3.0
+        _twoNumberSprite.position.y = 0.87
+        
+        _threeNumberSprite.animation.textureX = 360
+        _threeNumberSprite.animation.textureY = 36
+        _threeNumberSprite.animation.frameX = 2
+        _threeNumberSprite.animation.frameY = 6
+        _threeNumberSprite.width = 0.1
+        _threeNumberSprite.height = 0.1
+        _threeNumberSprite.animation.frameWidth = 34
+        _threeNumberSprite.animation.frameHeight = 27
+        _threeNumberSprite.position.x = -3.0
+        _threeNumberSprite.position.y = 0.87
+        
+        _fourNumberSprite.animation.textureX = 360
+        _fourNumberSprite.animation.textureY = 36
+        _fourNumberSprite.animation.frameX = 2
+        _fourNumberSprite.animation.frameY = 6
+        _fourNumberSprite.animation.frameWidth = 34
+        _fourNumberSprite.animation.frameHeight = 27
+        _fourNumberSprite.width = 0.1
+        _fourNumberSprite.height = 0.1
+        _fourNumberSprite.position.x = -3.0
+        _fourNumberSprite.position.y = 0.87
+    }
+    
+    func updateScore() {
+        var playerScoreString: String = String(_model.playerScore)
+        var oneDigit: Int = 0
+        var twoDigit: Int = 0
+        var threeDigit: Int = 0
+        var fourDigit: Int = 0
+        print(playerScoreString)
+        if playerScoreString.characters.count == 1 {
+            oneDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(0)]))!
+            _oneNumberSprite.position.x = 0.47
+            _twoNumberSprite.position.x = -3.0
+            _threeNumberSprite.position.x = -3.0
+            _fourNumberSprite.position.x = -3.0
+        }
+        if playerScoreString.characters.count >= 2 {
+            _oneNumberSprite.position.x = 0.47
+            _twoNumberSprite.position.x = 0.36
+            _threeNumberSprite.position.x = -3.0
+            _fourNumberSprite.position.x = -3.0
+            oneDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(1)]))!
+            twoDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(0)]))!
+        }
+        if playerScoreString.characters.count >= 3 {
+            _oneNumberSprite.position.x = 0.47
+            _twoNumberSprite.position.x = 0.36
+            _threeNumberSprite.position.x = 0.24
+            _fourNumberSprite.position.x = -3.0
+            oneDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(2)]))!
+            twoDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(1)]))!
+            threeDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(0)]))!
+        }
+        if playerScoreString.characters.count >= 4 {
+            _oneNumberSprite.position.x = 0.47
+            _twoNumberSprite.position.x = 0.36
+            _threeNumberSprite.position.x = 0.24
+            _fourNumberSprite.position.x = 0.12
+            oneDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(3)]))!
+            twoDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(2)]))!
+            threeDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(1)]))!
+            fourDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(0)]))!
+        }
+        
+        _oneNumberSprite.animation.frameX = Double((36 * oneDigit) + 2)
+        _twoNumberSprite.animation.frameX = Double((36 * twoDigit) + 2)
+        _threeNumberSprite.animation.frameX = Double((36 * threeDigit) + 2)
+        _fourNumberSprite.animation.frameX = Double((36 * fourDigit) + 2)
     }
 }
 

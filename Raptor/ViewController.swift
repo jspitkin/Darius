@@ -81,6 +81,9 @@ class ViewController: GLKViewController {
         if _model.level == 1 {
             spawnRandomAsteroids()
         }
+        
+        // Keep ship in bounds of the screen
+        shipInBounds()
     }
     
     func updateSpritesLocations() {
@@ -250,7 +253,6 @@ class ViewController: GLKViewController {
     }
     
     func shipDown() {
-        print("down")
         _dpadSprite.animation.texture = _dpadDown!.name
         _playerShip.animation.frameX = 39
         _playerShip.animation.frameY = 0
@@ -261,13 +263,11 @@ class ViewController: GLKViewController {
     }
     
     func shipLeft() {
-        print("left")
         _dpadSprite.animation.texture = _dpadLeft!.name
         _playerShip.animation.frameX = 2
         _playerShip.animation.frameY = 86
         _playerShip.animation.frameHeight = 45
         _playerShip.animation.frameWidth = 35
-
         _playerShip.velocity.x = -0.05;
         _playerShip.velocity.y = 0.0;
     }
@@ -371,6 +371,30 @@ class ViewController: GLKViewController {
     
     func constructFireButton() {
         
+    }
+    
+    func shipInBounds() {
+        print("x: \(_playerShip.position.x) y: \(_playerShip.position.y)")
+        
+        if _playerShip.position.y >= 0.9 {
+            _playerShip.velocity.y = 0
+            _playerShip.position.y = 0.9
+        }
+        
+        else if _playerShip.position.y <= -0.9 {
+            _playerShip.velocity.y = 0
+            _playerShip.position.y = -0.9
+        }
+        
+        else if _playerShip.position.x <= -0.45 {
+            _playerShip.velocity.x = 0
+            _playerShip.position.x = -0.45
+        }
+        
+        else if _playerShip.position.x >= 0.45 {
+            _playerShip.velocity.x = 0
+            _playerShip.position.x = 0.45
+        }
     }
 }
 

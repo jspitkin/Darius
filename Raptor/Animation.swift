@@ -86,6 +86,15 @@ class Animation {
         }
     }
     
+    func updateMainBackground() {
+        if (frameY > 477) {
+            frameY -= 1
+        }
+        if (frameX > 477) {
+            frameX -= 1
+        }
+    }
+    
     func updateShipExplosion(phase: Int) {
         switch phase {
         case 0:
@@ -125,4 +134,5 @@ class Animation {
             break
         }
     }
+    
 }

@@ -8,7 +8,7 @@
 
 import GLKit
 
-class ViewController: GLKViewController {
+class GameViewController: GLKViewController {
     private var _model = Model()
     private var _sprites = [Sprite]()
     private var _backgroundSprite = Sprite()
@@ -21,6 +21,7 @@ class ViewController: GLKViewController {
     private var _twoNumberSprite = Sprite()
     private var _threeNumberSprite = Sprite()
     private var _fourNumberSprite = Sprite()
+    private var _tapForMenuSprite = Sprite()
     
     private var _dpad: GLKTextureInfo? = nil
     private var _dpadUp: GLKTextureInfo? = nil
@@ -36,9 +37,8 @@ class ViewController: GLKViewController {
     private var _healthBar: GLKTextureInfo? = nil
     private var _gameover: GLKTextureInfo? = nil
     private var _numbers: GLKTextureInfo? = nil
+    private var _tapForMenu: GLKTextureInfo? = nil
 
-    
-    // look up the documention on update
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -52,12 +52,8 @@ class ViewController: GLKViewController {
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
-    // called once everytime the view is created.
-    // you can set a setting once and openGL will continue to use that setting
-    // until you change that setting. OpenGL is a state machine.
     private func setup() {
         glClearColor(0.0, 0.0, 0.0, 1.0)
 
@@ -67,6 +63,8 @@ class ViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "explosion")!.CGImage!, options: nil)
         _gameover = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "gameover")!.CGImage!, options: nil)
+        _tapForMenu = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "tap_for_menu")!.CGImage!, options: nil)
         
         constructBackgroundSprite()
         constructPlayerShipSprite()
@@ -77,7 +75,7 @@ class ViewController: GLKViewController {
 
     }
     
-    // runs right before drawInRect is called. You can think of this as your game loop.
+    // Game loop
     func update() {
         
         // Update sprite's locations
@@ -108,19 +106,42 @@ class ViewController: GLKViewController {
         updateScore()
     }
     
-    func updateSpritesLocations() {
-        for sprite in _sprites {
-            if sprite !== _playerShip {
-                let now = NSDate()
-                let elapsed = now.timeIntervalSinceDate(sprite.animation.lastUpdate)
-                sprite.position.x = sprite.initialPosition.x + Double(elapsed * sprite.velocity.x)
-                sprite.position.y = sprite.initialPosition.y + Double(elapsed * sprite.velocity.y)
+    // Draw loop
+    override func glkView(view: GLKView, drawInRect rect: CGRect) {
+        
+        // Makes the sprite square
+        let height: GLsizei = GLsizei(view.bounds.height * view.contentScaleFactor)
+        let offset: GLint = GLint((view.bounds.height - view.bounds.width) * -0.5 * view.contentScaleFactor)
+        glViewport(offset, 0, height, height)
+        
+        glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
+        
+        _backgroundSprite.drawBackground()
+        
+        for (index, sprite) in _sprites.enumerate().reverse() {
+            if sprite.remove && !sprite.isPlayer {
+                _sprites.removeAtIndex(index)
             }
-            else {
-                sprite.position.x = sprite.position.x + sprite.velocity.x
-                sprite.position.y = sprite.position.y + sprite.velocity.y
+            else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
+                _sprites.removeAtIndex(index)
             }
         }
+        
+        for sprite in _sprites {
+            sprite.draw()
+        }
+        
+        _dpadSprite.drawControls()
+        _fireSprite.drawControls()
+        _healthBarSprite.drawControls()
+        if _model.playerHealth == 0 {
+            _gameoverSprite.drawControls()
+            _tapForMenuSprite.drawControls()
+        }
+        _oneNumberSprite.drawControls()
+        _twoNumberSprite.drawControls()
+        _threeNumberSprite.drawControls()
+        _fourNumberSprite.drawControls()
     }
     
     func detectCollisions() {
@@ -187,15 +208,37 @@ class ViewController: GLKViewController {
             gameOver()
         }
         
+        // Adjust health bar
         _healthBarSprite.animation.frameWidth = _healthBarSprite.animation.frameWidth - 105
         _healthBarSprite.width = _healthBarSprite.width - 0.1
+        _healthBarSprite.position.x = _healthBarSprite.position.x - 0.05
         
+    }
+    
+    func shipInBounds() {
+        if _playerShip.position.y >= 0.9 {
+            _playerShip.velocity.y = 0
+            _playerShip.position.y = 0.9
+        }
+            
+        else if _playerShip.position.y <= -0.75 {
+            _playerShip.velocity.y = 0
+            _playerShip.position.y = -0.75
+        }
+            
+        else if _playerShip.position.x <= -0.45 {
+            _playerShip.velocity.x = 0
+            _playerShip.position.x = -0.45
+        }
+            
+        else if _playerShip.position.x >= 0.45 {
+            _playerShip.velocity.x = 0
+            _playerShip.position.x = 0.45
+        }
     }
     
     func gameOver() {
         _playerShip.remove = true
-        _dpadSprite.remove = true
-        _fireSprite.remove = true
         _gameoverSprite.animation.texture = _gameover!.name
         _gameoverSprite.animation.textureX = 178
         _gameoverSprite.animation.textureY = 114
@@ -208,9 +251,25 @@ class ViewController: GLKViewController {
         _gameoverSprite.width = 0.5
         _gameoverSprite.height = 0.5
         _gameoverSprite.position.x = 0
-        _gameoverSprite.position.y = 0
+        _gameoverSprite.position.y = 0.2
         
         _gameoverSprite.drawControls()
+        
+        _tapForMenuSprite.animation.texture = _tapForMenu!.name
+        _tapForMenuSprite.animation.textureX = 941
+        _tapForMenuSprite.animation.textureY = 128
+        _tapForMenuSprite.animation.frameWidth = 941
+        _tapForMenuSprite.animation.frameHeight = 128
+        _tapForMenuSprite.animation.rows = 1
+        _tapForMenuSprite.animation.columns = 1
+        _tapForMenuSprite.animation.frameX = 0
+        _tapForMenuSprite.animation.frameY = 0
+        _tapForMenuSprite.width = 0.5
+        _tapForMenuSprite.height = 0.2
+        _tapForMenuSprite.position.x = 0
+        _tapForMenuSprite.position.y = -0.2
+        
+        _tapForMenuSprite.drawControls()
         
     }
     
@@ -268,45 +327,6 @@ class ViewController: GLKViewController {
         
         sprite.remove = true
         _sprites.append(deathSprite)
-    }
-    
-    // Called everytime GLK should refresh it's view
-    // Redrawing every pixel every frame at about 60 FPS (this is adjustable)
-    // This can be thought of as the draw loop.
-    override func glkView(view: GLKView, drawInRect rect: CGRect) {
-        
-        // Makes the sprite square
-        let height: GLsizei = GLsizei(view.bounds.height * view.contentScaleFactor)
-        let offset: GLint = GLint((view.bounds.height - view.bounds.width) * -0.5 * view.contentScaleFactor)
-        glViewport(offset, 0, height, height)
-        
-        glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
-        
-        _backgroundSprite.drawBackground()
-        
-        for (index, sprite) in _sprites.enumerate().reverse() {
-            if sprite.remove && !sprite.isPlayer {
-                _sprites.removeAtIndex(index)
-            }
-            else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
-              _sprites.removeAtIndex(index)
-            }
-        }
-        
-        for sprite in _sprites {
-            sprite.draw()
-        }
-        
-        _dpadSprite.drawControls()
-        _fireSprite.drawControls()
-        _healthBarSprite.drawControls()
-        if _model.playerHealth == 0 {
-            _gameoverSprite.drawControls()
-        }
-        _oneNumberSprite.drawControls()
-        _twoNumberSprite.drawControls()
-        _threeNumberSprite.drawControls()
-        _fourNumberSprite.drawControls()
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -599,28 +619,6 @@ class ViewController: GLKViewController {
         _healthBarSprite.drawControls()
     }
     
-    func shipInBounds() {
-        if _playerShip.position.y >= 0.9 {
-            _playerShip.velocity.y = 0
-            _playerShip.position.y = 0.9
-        }
-        
-        else if _playerShip.position.y <= -0.75 {
-            _playerShip.velocity.y = 0
-            _playerShip.position.y = -0.75
-        }
-        
-        else if _playerShip.position.x <= -0.45 {
-            _playerShip.velocity.x = 0
-            _playerShip.position.x = -0.45
-        }
-        
-        else if _playerShip.position.x >= 0.45 {
-            _playerShip.velocity.x = 0
-            _playerShip.position.x = 0.45
-        }
-    }
-    
     func constructScoreBar() {
         _numbers = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
@@ -674,13 +672,27 @@ class ViewController: GLKViewController {
         _fourNumberSprite.position.y = 0.87
     }
     
+    func updateSpritesLocations() {
+        for sprite in _sprites {
+            if sprite !== _playerShip {
+                let now = NSDate()
+                let elapsed = now.timeIntervalSinceDate(sprite.animation.lastUpdate)
+                sprite.position.x = sprite.initialPosition.x + Double(elapsed * sprite.velocity.x)
+                sprite.position.y = sprite.initialPosition.y + Double(elapsed * sprite.velocity.y)
+            }
+            else {
+                sprite.position.x = sprite.position.x + sprite.velocity.x
+                sprite.position.y = sprite.position.y + sprite.velocity.y
+            }
+        }
+    }
+    
     func updateScore() {
-        var playerScoreString: String = String(_model.playerScore)
+        let playerScoreString: String = String(_model.playerScore)
         var oneDigit: Int = 0
         var twoDigit: Int = 0
         var threeDigit: Int = 0
         var fourDigit: Int = 0
-        print(playerScoreString)
         if playerScoreString.characters.count == 1 {
             oneDigit = Int(String(playerScoreString[playerScoreString.startIndex.advancedBy(0)]))!
             _oneNumberSprite.position.x = 0.47

@@ -69,6 +69,15 @@ class Animation {
         }
     }
     
+    func updateExplosion() -> Bool {
+        if curCol == 6 {
+            return true
+        }
+        frameX = frameX + 63
+        curCol++
+        return false
+    }
+    
     func updateBackground() {
         if (frameY < 500) {
             frameY = 1400

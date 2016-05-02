@@ -55,7 +55,7 @@ class Sprite {
             "varying highp vec2 textureCoordinateInterpolated; \n" +
             "void main() \n" +
             "{ \n" +
-                "   gl_FragColor = texture2D(textureUnit, textureCoordinateInterpolated);" +
+                "   gl_FragColor = texture2D(textureUnit, textureCoordinateInterpolated); \n" +
             "} \n" +
             " \n"
         
@@ -145,6 +145,7 @@ class Sprite {
     var isPlayer: Bool = false
     var isPlayerBullet: Bool = false
     var isEnemyBullet: Bool = false
+    var remove: Bool = false
     
     var animation: Animation = Animation()
     
@@ -163,7 +164,14 @@ class Sprite {
         glBindTexture(GLenum(GL_TEXTURE_2D), animation.texture)
         glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
         
-        animation.updateSprite()
+        if isEnemy || isPlayer || isPlayerBullet || isEnemyBullet {
+            animation.updateSprite()
+        }
+        else {
+            if animation.updateExplosion() {
+                remove = true
+            }
+        }
         
     }
     
@@ -191,7 +199,7 @@ class Sprite {
         
         glUniform2f(glGetUniformLocation(Sprite._program, "translate"), GLfloat(position.x), GLfloat(position.y))
         glUniform2f(glGetUniformLocation(Sprite._program, "scale"), width, height)
-        glUniform4f(glGetUniformLocation(Sprite._program, "color"), 1.0, 0.0, 0.0 ,1.0)
+        glUniform4f(glGetUniformLocation(Sprite._program, "color"), 1.0, 0.0, 0.0, 1.0)
         glUniform1i(glGetUniformLocation(Sprite._program, "textureUnit"), 0)
         glUniform2f(glGetUniformLocation(Sprite._program, "textureTranslate"), GLfloat(animation.getFrameX()), GLfloat(animation.getFrameY()))
         glUniform2f(glGetUniformLocation(Sprite._program, "textureScale"), GLfloat(animation.getFrameWidth()), GLfloat(animation.getFrameHeight()))

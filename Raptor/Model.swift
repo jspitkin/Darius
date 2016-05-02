@@ -12,5 +12,9 @@ class Model {
     var level: Int = 1
     let asteroidFrequency: Int = 20
     var currentAsteroidFrequency: Int = 0
+    
+    let firingFrequency: Int = 5
+    var currentFiringFrequency: Int = 0
+    var playerFiring: Bool = false
 }
 

@@ -16,6 +16,7 @@ class ViewController: GLKViewController {
     private var _fireSprite = Sprite()
     private var _playerShip = Sprite()
     private var _healthBarSprite = Sprite()
+    private var _gameoverSprite = Sprite()
     
     private var _dpad: GLKTextureInfo? = nil
     private var _dpadUp: GLKTextureInfo? = nil
@@ -29,6 +30,7 @@ class ViewController: GLKViewController {
     private var _background: GLKTextureInfo? = nil
     private var _explosion: GLKTextureInfo? = nil
     private var _healthBar: GLKTextureInfo? = nil
+    private var _gameover: GLKTextureInfo? = nil
 
     
     // look up the documention on update
@@ -56,9 +58,10 @@ class ViewController: GLKViewController {
 
         _asteroid = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "asteroid")!.CGImage!, options: nil)
-        
         _explosion = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "explosion")!.CGImage!, options: nil)
+        _gameover = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "gameover")!.CGImage!, options: nil)
         
         constructBackgroundSprite()
         constructPlayerShipSprite()
@@ -86,6 +89,14 @@ class ViewController: GLKViewController {
         
         if _model.playerFiring {
             playerFire()
+        }
+        else {
+            _model.currentFiringFrequency = _model.firingFrequency
+        }
+        
+        if _playerShip.playerShipExplosionPhase == 20 {
+            _playerShip.position.x = -3
+            _playerShip.position.y = -3
         }
     }
     
@@ -136,13 +147,62 @@ class ViewController: GLKViewController {
         
         // player and enemy collision
         if sprite.isPlayer && spriteTwo.isEnemy || sprite.isPlayer && sprite.isPlayerBullet {
-            //print("Player has collided with an enemy!")
+            if sprite.isEnemy {
+                enemyCollision(sprite)
+                playerHit(spriteTwo)
+            }
+            else if spriteTwo.isEnemy {
+                enemyCollision(spriteTwo)
+                playerHit(sprite)
+            }
         }
         
         // player and enemy bullet collision
         if sprite.isPlayer && spriteTwo.isEnemyBullet || sprite.isPlayer && sprite.isEnemyBullet {
-            print("Bullet hit the player!")
+            if sprite.isEnemyBullet {
+                sprite.remove = true
+                playerHit(spriteTwo)
+            }
+            else if spriteTwo.isEnemyBullet {
+                spriteTwo.remove = true
+                playerHit(sprite)
+            }
         }
+    }
+    
+    func playerHit(sprite: Sprite) {
+        _model.playerHealth--;
+        
+        if _model.playerHealth == 0 {
+            _healthBarSprite.remove = true
+            gameOver()
+        }
+        
+        _healthBarSprite.animation.frameWidth = _healthBarSprite.animation.frameWidth - 105
+        _healthBarSprite.width = _healthBarSprite.width - 0.1
+        
+    }
+    
+    func gameOver() {
+        _playerShip.remove = true
+        _dpadSprite.remove = true
+        _fireSprite.remove = true
+        _gameoverSprite.animation.texture = _gameover!.name
+        _gameoverSprite.animation.textureX = 178
+        _gameoverSprite.animation.textureY = 114
+        _gameoverSprite.animation.frameWidth = 178
+        _gameoverSprite.animation.frameHeight = 114
+        _gameoverSprite.animation.rows = 1
+        _gameoverSprite.animation.columns = 1
+        _gameoverSprite.animation.frameX = 0
+        _gameoverSprite.animation.frameY = 0
+        _gameoverSprite.width = 0.5
+        _gameoverSprite.height = 0.5
+        _gameoverSprite.position.x = 0
+        _gameoverSprite.position.y = 0
+        
+        _gameoverSprite.drawControls()
+        
     }
     
     func asteroidHit(sprite: Sprite) {
@@ -176,6 +236,31 @@ class ViewController: GLKViewController {
         }
     }
     
+    func enemyCollision(sprite: Sprite) {
+        let deathSprite: Sprite = Sprite()
+        deathSprite.animation.texture = _explosion!.name
+        deathSprite.animation.textureX = 320
+        deathSprite.animation.textureY = 320
+        deathSprite.animation.frameHeight = 55
+        deathSprite.animation.frameWidth = 52
+        deathSprite.animation.rows = 0
+        deathSprite.animation.columns = 5
+        deathSprite.animation.frameX = 10
+        deathSprite.animation.frameY = 7
+        deathSprite.animation.framesPerAnimation = 1
+        deathSprite.width = sprite.width * 0.75
+        deathSprite.height = sprite.height * 0.75
+        deathSprite.initialPosition.y = sprite.position.y
+        deathSprite.initialPosition.x = sprite.position.x
+        deathSprite.position.y = deathSprite.initialPosition.y
+        deathSprite.position.x = deathSprite.initialPosition.x
+        deathSprite.velocity.x = 0.0
+        deathSprite.velocity.y = 0.0
+        
+        sprite.remove = true
+        _sprites.append(deathSprite)
+    }
+    
     // Called everytime GLK should refresh it's view
     // Redrawing every pixel every frame at about 60 FPS (this is adjustable)
     // This can be thought of as the draw loop.
@@ -191,7 +276,7 @@ class ViewController: GLKViewController {
         _backgroundSprite.drawBackground()
         
         for (index, sprite) in _sprites.enumerate().reverse() {
-            if sprite.remove {
+            if sprite.remove && !sprite.isPlayer {
                 _sprites.removeAtIndex(index)
             }
             else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
@@ -206,6 +291,9 @@ class ViewController: GLKViewController {
         _dpadSprite.drawControls()
         _fireSprite.drawControls()
         _healthBarSprite.drawControls()
+        if _model.playerHealth == 0 {
+            _gameoverSprite.drawControls()
+        }
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {

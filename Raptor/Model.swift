@@ -16,5 +16,8 @@ class Model {
     let firingFrequency: Int = 5
     var currentFiringFrequency: Int = 0
     var playerFiring: Bool = false
+    
+    var playerHealth: Int = 5
+    
 }
 

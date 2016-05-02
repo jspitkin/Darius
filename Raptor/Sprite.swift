@@ -146,6 +146,7 @@ class Sprite {
     var isPlayerBullet: Bool = false
     var isEnemyBullet: Bool = false
     var remove: Bool = false
+    var playerShipExplosionPhase: Int = 0
     
     var animation: Animation = Animation()
     
@@ -164,8 +165,12 @@ class Sprite {
         glBindTexture(GLenum(GL_TEXTURE_2D), animation.texture)
         glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
         
-        if isEnemy || isPlayer || isPlayerBullet || isEnemyBullet {
+        if isEnemy || isPlayer && !remove || isPlayerBullet || isEnemyBullet {
             animation.updateSprite()
+        }
+        else if isPlayer && remove {
+            animation.updateShipExplosion(playerShipExplosionPhase)
+            playerShipExplosionPhase++
         }
         else {
             if animation.updateExplosion() {

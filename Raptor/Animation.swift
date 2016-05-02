@@ -85,4 +85,44 @@ class Animation {
             frameY -= 5
         }
     }
+    
+    func updateShipExplosion(phase: Int) {
+        switch phase {
+        case 0:
+            frameX = 6
+            frameY = 165
+            frameWidth = 7
+            frameHeight = 7
+        case 3:
+            frameX = 22
+            frameY = 161
+            frameWidth = 15
+            frameHeight = 15
+        case 6:
+            frameX = 45
+            frameY = 158
+            frameWidth = 21
+            frameHeight = 21
+        case 9:
+            frameX = 74
+            frameY = 151
+            frameWidth = 39
+            frameHeight = 35
+        case 12:
+            frameX = 0
+            frameY = 194
+            frameWidth = 45
+            frameHeight = 41
+        case 15:
+            frameX = 51
+            frameY = 192
+            frameWidth = 53
+            frameHeight = 49
+        case 18:
+            frameWidth = 0
+            frameHeight = 0
+        default:
+            break
+        }
+    }
 }

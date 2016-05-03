@@ -37,6 +37,7 @@ class GameViewController: GLKViewController {
     private var _healthBar: GLKTextureInfo? = nil
     private var _gameover: GLKTextureInfo? = nil
     private var _numbers: GLKTextureInfo? = nil
+    private var _enemyShip: GLKTextureInfo? = nil
     
     private var _logoSprite = Sprite()
     private var _backgroundMainSprite = Sprite()
@@ -96,6 +97,14 @@ class GameViewController: GLKViewController {
             
             if _model.level == 1 {
                 spawnRandomAsteroids()
+            }
+            else if _model.level == 2 {
+                spawnEnemyShips()
+                enemyFire()
+            }
+            else if _model.level == 3 {
+                spawnRandomAsteroids()
+                spawnEnemyShips()
             }
             
             // Keep ship in bounds of the screen
@@ -211,42 +220,29 @@ class GameViewController: GLKViewController {
     
     func collision(sprite: Sprite, spriteTwo: Sprite) {
         // player bullet and enemy collision
-        if sprite.isPlayerBullet && spriteTwo.isEnemy || sprite.isEnemy && sprite.isPlayerBullet {
+        if sprite.isPlayerBullet && (spriteTwo.isEnemy || spriteTwo.isSpaceship) || (sprite.isEnemy || sprite.isSpaceship) && sprite.isPlayerBullet {
             _model.playerScore++
-            if sprite.isEnemy {
+            if sprite.isEnemy || sprite.isEnemyBullet || sprite.isSpaceship {
                 spriteTwo.remove = true
                 asteroidHit(sprite)
             }
-            else if spriteTwo.isEnemy {
+            else if spriteTwo.isEnemy || spriteTwo.isEnemyBullet || spriteTwo.isSpaceship {
                 sprite.remove = true
                 asteroidHit(spriteTwo)
             }
         }
         
         // player and enemy collision
-        if sprite.isPlayer && spriteTwo.isEnemy || sprite.isPlayer && sprite.isPlayerBullet {
-            if sprite.isEnemy {
+        if sprite.isPlayer && (spriteTwo.isEnemy || spriteTwo.isSpaceship || spriteTwo.isEnemyBullet) || spriteTwo.isPlayer && (sprite.isPlayerBullet || sprite.isSpaceship || sprite.isEnemy) {
+            if sprite.isEnemy || sprite.isEnemyBullet || sprite.isSpaceship {
                 enemyCollision(sprite)
                 playerHit(spriteTwo)
             }
-            else if spriteTwo.isEnemy {
+            else if spriteTwo.isEnemy || spriteTwo.isEnemyBullet || spriteTwo.isSpaceship {
                 enemyCollision(spriteTwo)
                 playerHit(sprite)
             }
         }
-        
-        // player and enemy bullet collision
-        if sprite.isPlayer && spriteTwo.isEnemyBullet || sprite.isPlayer && sprite.isEnemyBullet {
-            if sprite.isEnemyBullet {
-                sprite.remove = true
-                playerHit(spriteTwo)
-            }
-            else if spriteTwo.isEnemyBullet {
-                spriteTwo.remove = true
-                playerHit(sprite)
-            }
-        }
-    }
     
     func playerHit(sprite: Sprite) {
         _model.playerHealth--;
@@ -357,7 +353,9 @@ class GameViewController: GLKViewController {
         deathSprite.position.x = deathSprite.initialPosition.x
         deathSprite.velocity.x = 0.0
         deathSprite.velocity.y = 0.0
-        
+        sprite.isEnemy = false
+        sprite.isSpaceship = false
+        sprite.isEnemyBullet = false
         sprite.remove = true
         _sprites.append(deathSprite)
     }
@@ -555,6 +553,74 @@ class GameViewController: GLKViewController {
             _model.currentAsteroidFrequency++;
         }
     }
+    
+    func spawnEnemyShips() {
+        if _model.currentEnemyFrequency == _model.enemyFrequency {
+            _model.currentEnemyFrequency = 0
+            let sprite: Sprite = Sprite()
+            sprite.animation.texture = _enemyShip!.name
+            sprite.animation.textureX = 348
+            sprite.animation.textureY = 250
+            sprite.animation.frameHeight = 30
+            sprite.animation.frameWidth = 53
+            sprite.animation.rows = 2
+            sprite.animation.columns = 6
+            sprite.animation.frameX = 5
+            sprite.animation.frameY = 5
+            sprite.animation.framesPerAnimation = 1
+            sprite.width = 0.15
+            sprite.height = 0.15
+            sprite.initialPosition.y = 1.1
+            sprite.initialPosition.x = (drand48() * 2) - 1
+            sprite.position.y = sprite.initialPosition.y
+            sprite.position.x = sprite.initialPosition.x
+            sprite.velocity.x = 0.0
+            sprite.velocity.y = -1 * ((drand48() * (0.5 - 0.15)) + 0.15)
+            sprite.isSpaceship = true
+            
+            _sprites.append(sprite)
+        }
+        else {
+            _model.currentEnemyFrequency++;
+        }
+
+    }
+    
+    func enemyFire() {
+    
+        if _model.currentEnemyFiringFrequency == _model.firingEnemyFrequency {
+            _model.currentEnemyFiringFrequency = 0
+            for sprite in _sprites {
+                if sprite.isSpaceship {
+                    let bullet: Sprite = Sprite()
+                    bullet.animation.texture = _enemyShip!.name
+                    bullet.animation.textureX = 348
+                    bullet.animation.textureY = 250
+                    bullet.animation.frameHeight = 39
+                    bullet.animation.frameWidth = 28
+                    bullet.animation.rows = 0
+                    bullet.animation.columns = 0
+                    bullet.animation.frameX = 9
+                    bullet.animation.frameY = 123
+                    bullet.animation.framesPerAnimation = 1
+                    bullet.width = 0.02
+                    bullet.height = 0.06
+                    bullet.initialPosition.y = sprite.position.y - 0.1
+                    bullet.initialPosition.x = sprite.position.x
+                    bullet.position.y = sprite.initialPosition.y
+                    bullet.position.x = sprite.initialPosition.x
+                    bullet.velocity.x = 0.0
+                    bullet.velocity.y = -0.8
+                    bullet.isEnemyBullet = true
+                    _sprites.append(bullet)
+                }
+            }
+        }
+        else {
+            _model.currentEnemyFiringFrequency++
+        }
+    }
+
     
     func constructBackgroundSprite() {
         _backgroundSprite.animation.texture = _background!.name
@@ -812,6 +878,8 @@ class GameViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "play_game")!.CGImage!, options: nil)
         _highScore = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "high_scores")!.CGImage!, options: nil)
+        _enemyShip = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "enemy_ship")!.CGImage!, options: nil)
     }
     
     

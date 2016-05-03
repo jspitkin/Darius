@@ -142,6 +142,7 @@ class Sprite {
     var width: Float = 1.0
     var height: Float = 1.0
     var isEnemy: Bool = false
+    var isSpaceship: Bool = false
     var isPlayer: Bool = false
     var isPlayerBullet: Bool = false
     var isEnemyBullet: Bool = false
@@ -165,7 +166,7 @@ class Sprite {
         glBindTexture(GLenum(GL_TEXTURE_2D), animation.texture)
         glDrawArrays(GLenum(GL_TRIANGLE_STRIP), 0, 4)
         
-        if isEnemy || isPlayer && !remove || isPlayerBullet || isEnemyBullet {
+        if isEnemy || isPlayer && !remove || isPlayerBullet || isEnemyBullet || isSpaceship {
             animation.updateSprite()
         }
         else if isPlayer && remove {

@@ -43,29 +43,55 @@ class Animation {
     }
     
     func updateSprite() {
+        
+        if rows == 2 && columns == 6 {
+            if currentFrame == framesPerAnimation {
+                currentFrame = 0
+                if curCol == columns {
+                    curCol = 1
+                    frameX = 6
+                    curRow++;
+                    frameY = frameY + 39;
+                } else {
+                    frameX = frameX + 56;
+                    curCol++;
+                }
+                
+                if curRow == rows {
+                    curRow = 1
+                    frameY = 6
+                }
+            }
+            else {
+                currentFrame++
+            }
+        }
+        
         if rows == 0 && columns == 0 {
             return;
         }
         
-        if currentFrame == framesPerAnimation {
-            currentFrame = 0;
-            if curRow == rows {
-                curRow = 1
-                frameX = 15
-                curCol++;
-                frameY = frameY + 128;
-            } else {
-                frameX = frameX + 128;
-                curRow++;
+        if rows == 8 && columns == 8 {
+            if currentFrame == framesPerAnimation {
+                currentFrame = 0;
+                if curRow == rows {
+                    curRow = 1
+                    frameX = 15
+                    curCol++;
+                    frameY = frameY + 128;
+                } else {
+                    frameX = frameX + 128;
+                    curRow++;
+                }
+                
+                if curCol == columns {
+                    curCol = 1
+                    frameY = 10
+                }
             }
-        
-            if curCol == columns {
-                curCol = 1
-                frameY = 10
+            else{
+                currentFrame++;
             }
-        }
-        else{
-            currentFrame++;
         }
     }
     

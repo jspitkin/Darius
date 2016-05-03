@@ -46,8 +46,17 @@ class GameViewController: GLKViewController {
         glkView.context = EAGLContext(API: .OpenGLES2)
         glkView.drawableColorFormat = .RGBA8888 // 32-bit color format
         EAGLContext.setCurrentContext(glkView.context)
-        
+        print("got here 2")
+        self.paused = false
+        self.paused = true
+        self.paused = false
         setup()
+    }
+    
+    override func loadView() {
+        super.loadView()
+        print("got here 3")
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -56,7 +65,10 @@ class GameViewController: GLKViewController {
 
     private func setup() {
         glClearColor(0.0, 0.0, 0.0, 1.0)
-
+        _buttonUnpressed = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_unpressed")!.CGImage!, options: nil)
+        _button = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_pressed")!.CGImage!, options: nil)
         _asteroid = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "asteroid")!.CGImage!, options: nil)
         _explosion = try!
@@ -65,6 +77,24 @@ class GameViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "gameover")!.CGImage!, options: nil)
         _tapForMenu = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "tap_for_menu")!.CGImage!, options: nil)
+        _healthBar = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "healthbar")!.CGImage!, options: nil)
+        _numbers = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
+        _dpad = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad")!.CGImage!, options: nil)
+        _dpadUp = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_up")!.CGImage!, options: nil)
+        _dpadRight = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_right")!.CGImage!, options: nil)
+        _dpadDown = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_down")!.CGImage!, options: nil)
+        _dpadLeft = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_left")!.CGImage!, options: nil)
+        _ship = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "ship")!.CGImage!, options: nil)
+        _background = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
         
         constructBackgroundSprite()
         constructPlayerShipSprite()
@@ -77,7 +107,6 @@ class GameViewController: GLKViewController {
     
     // Game loop
     func update() {
-        
         // Update sprite's locations
         updateSpritesLocations()
        
@@ -108,7 +137,6 @@ class GameViewController: GLKViewController {
     
     // Draw loop
     override func glkView(view: GLKView, drawInRect rect: CGRect) {
-        
         // Makes the sprite square
         let height: GLsizei = GLsizei(view.bounds.height * view.contentScaleFactor)
         let offset: GLint = GLint((view.bounds.height - view.bounds.width) * -0.5 * view.contentScaleFactor)
@@ -505,8 +533,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructBackgroundSprite() {
-        _background = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
         _backgroundSprite.animation.texture = _background!.name
         _backgroundSprite.animation.textureX = 1080
         _backgroundSprite.animation.textureY = 1920
@@ -519,9 +545,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructPlayerShipSprite() {
-        _ship = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "ship")!.CGImage!, options: nil)
-        
         _playerShip.animation.texture = _ship!.name
         _playerShip.animation.textureX = 116
         _playerShip.animation.textureY = 345
@@ -546,17 +569,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructDirectionalPad() {
-        _dpad = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad")!.CGImage!, options: nil)
-        _dpadUp = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_up")!.CGImage!, options: nil)
-        _dpadRight = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_right")!.CGImage!, options: nil)
-        _dpadDown = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_down")!.CGImage!, options: nil)
-        _dpadLeft = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_left")!.CGImage!, options: nil)
-        
         _dpadSprite.animation.texture = _dpad!.name
         _dpadSprite.animation.textureX = 280
         _dpadSprite.animation.textureY = 280
@@ -575,11 +587,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructFireButton() {
-        _buttonUnpressed = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_unpressed")!.CGImage!, options: nil)
-        _button = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_pressed")!.CGImage!, options: nil)
-        
         _fireSprite.animation.texture = _buttonUnpressed!.name
         _fireSprite.animation.textureX = 128
         _fireSprite.animation.textureY = 128
@@ -599,8 +606,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructHealthBar() {
-        _healthBar = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "healthbar")!.CGImage!, options: nil)
         
         _healthBarSprite.animation.texture = _healthBar!.name
         _healthBarSprite.animation.textureX = 516
@@ -620,8 +625,6 @@ class GameViewController: GLKViewController {
     }
     
     func constructScoreBar() {
-        _numbers = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
         _oneNumberSprite.animation.texture = _numbers!.name
         _twoNumberSprite.animation.texture = _numbers!.name
         _threeNumberSprite.animation.texture = _numbers!.name

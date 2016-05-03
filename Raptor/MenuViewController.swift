@@ -69,7 +69,13 @@ class MenuViewController: GLKViewController {
         super.touchesBegan(touches, withEvent: event)
         let touch: UITouch = touches.first!
         let touchPoint: CGPoint = touch.locationInView(self.view)
-        
+        newGame()
+    }
+    
+    func newGame() {
+        let gameViewController: GameViewController = GameViewController()
+        self.navigationController?.pushViewController(gameViewController, animated: true)
+        print("got here 1")
     }
     
     func constructLogoSprite() {

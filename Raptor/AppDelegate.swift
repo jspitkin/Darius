@@ -16,8 +16,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
+        let menuViewController: MenuViewController = MenuViewController()
+        
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
-        window?.rootViewController = MenuViewController()
+        window?.rootViewController = UINavigationController(rootViewController: menuViewController)
         window?.makeKeyAndVisible()
         
         return true

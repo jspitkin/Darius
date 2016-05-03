@@ -10,7 +10,7 @@ import GLKit
 
 class Model {
     var level: Int = 1
-    let asteroidFrequency: Int = 20
+    var asteroidFrequency: Int = 20
     var currentAsteroidFrequency: Int = 0
     
     let firingFrequency: Int = 5
@@ -20,5 +20,9 @@ class Model {
     var playerHealth: Int = 5
     var playerScore: Int = 0
     
-}
+    var playingGame: Bool = false
+    var displayGameScreen: Bool = true
+    var gameOverMenu: Bool = false
+    var gameOverDelay: Int = 0
+ }
 

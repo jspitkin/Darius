@@ -37,7 +37,16 @@ class GameViewController: GLKViewController {
     private var _healthBar: GLKTextureInfo? = nil
     private var _gameover: GLKTextureInfo? = nil
     private var _numbers: GLKTextureInfo? = nil
-    private var _tapForMenu: GLKTextureInfo? = nil
+    
+    private var _logoSprite = Sprite()
+    private var _backgroundMainSprite = Sprite()
+    private var _startSprite = Sprite()
+    private var _highScoreSprite = Sprite()
+    
+    private var _logo: GLKTextureInfo? = nil
+    private var _backgroundMain: GLKTextureInfo? = nil
+    private var _startGame: GLKTextureInfo? = nil
+    private var _highScore: GLKTextureInfo? = nil
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,17 +55,7 @@ class GameViewController: GLKViewController {
         glkView.context = EAGLContext(API: .OpenGLES2)
         glkView.drawableColorFormat = .RGBA8888 // 32-bit color format
         EAGLContext.setCurrentContext(glkView.context)
-        print("got here 2")
-        self.paused = false
-        self.paused = true
-        self.paused = false
         setup()
-    }
-    
-    override func loadView() {
-        super.loadView()
-        print("got here 3")
-        
     }
 
     override func didReceiveMemoryWarning() {
@@ -65,36 +64,17 @@ class GameViewController: GLKViewController {
 
     private func setup() {
         glClearColor(0.0, 0.0, 0.0, 1.0)
-        _buttonUnpressed = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_unpressed")!.CGImage!, options: nil)
-        _button = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_pressed")!.CGImage!, options: nil)
-        _asteroid = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "asteroid")!.CGImage!, options: nil)
-        _explosion = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "explosion")!.CGImage!, options: nil)
-        _gameover = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "gameover")!.CGImage!, options: nil)
-        _tapForMenu = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "tap_for_menu")!.CGImage!, options: nil)
-        _healthBar = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "healthbar")!.CGImage!, options: nil)
-        _numbers = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
-        _dpad = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad")!.CGImage!, options: nil)
-        _dpadUp = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_up")!.CGImage!, options: nil)
-        _dpadRight = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_right")!.CGImage!, options: nil)
-        _dpadDown = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_down")!.CGImage!, options: nil)
-        _dpadLeft = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_left")!.CGImage!, options: nil)
-        _ship = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "ship")!.CGImage!, options: nil)
-        _background = try!
-            GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
+
+        loadSprites()
+        constructLogoSprite()
+        constructBackgroundMainSprite()
+        constructStartGameSprite()
+        constructHighScoreSprite()
+
+    }
+    
+    private func setupGame() {
+        glClearColor(0.0, 0.0, 0.0, 1.0)
         
         constructBackgroundSprite()
         constructPlayerShipSprite()
@@ -102,37 +82,44 @@ class GameViewController: GLKViewController {
         constructFireButton()
         constructHealthBar()
         constructScoreBar()
-
     }
     
     // Game loop
     func update() {
-        // Update sprite's locations
-        updateSpritesLocations()
-       
-        // Collision detection
-        detectCollisions()
-        
-        if _model.level == 1 {
-            spawnRandomAsteroids()
+        /* GAME SCREEN */
+        if _model.playingGame || _model.gameOverMenu {
+            // Update sprite's locations
+            updateSpritesLocations()
+            
+            // Collision detection
+            detectCollisions()
+            
+            if _model.level == 1 {
+                spawnRandomAsteroids()
+            }
+            
+            // Keep ship in bounds of the screen
+            shipInBounds()
+            
+            if _model.playerFiring {
+                playerFire()
+            }
+            else {
+                _model.currentFiringFrequency = _model.firingFrequency
+            }
+            
+            if _playerShip.playerShipExplosionPhase == 20 {
+                _playerShip.position.x = -3
+                _playerShip.position.y = -3
+            }
+            
+            updateScore()
         }
         
-        // Keep ship in bounds of the screen
-        shipInBounds()
-        
-        if _model.playerFiring {
-            playerFire()
+        /* GAME OVER SCREEN */
+        if _model.gameOverMenu {
+            _model.gameOverDelay++;
         }
-        else {
-            _model.currentFiringFrequency = _model.firingFrequency
-        }
-        
-        if _playerShip.playerShipExplosionPhase == 20 {
-            _playerShip.position.x = -3
-            _playerShip.position.y = -3
-        }
-        
-        updateScore()
     }
     
     // Draw loop
@@ -144,32 +131,65 @@ class GameViewController: GLKViewController {
         
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
         
-        _backgroundSprite.drawBackground()
-        
-        for (index, sprite) in _sprites.enumerate().reverse() {
-            if sprite.remove && !sprite.isPlayer {
-                _sprites.removeAtIndex(index)
+        /* GAME SCREEN */
+        if _model.playingGame {
+            _backgroundSprite.drawBackground()
+            
+            for (index, sprite) in _sprites.enumerate().reverse() {
+                if sprite.remove && !sprite.isPlayer {
+                    _sprites.removeAtIndex(index)
+                }
+                else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
+                    _sprites.removeAtIndex(index)
+                }
             }
-            else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
-                _sprites.removeAtIndex(index)
+            
+            for sprite in _sprites {
+                sprite.draw()
             }
+            
+            _dpadSprite.drawControls()
+            _fireSprite.drawControls()
+            _healthBarSprite.drawControls()
+            _oneNumberSprite.drawControls()
+            _twoNumberSprite.drawControls()
+            _threeNumberSprite.drawControls()
+            _fourNumberSprite.drawControls()
         }
         
-        for sprite in _sprites {
-            sprite.draw()
+        /* MAIN SCREEN */
+        if _model.displayGameScreen {
+            _backgroundMainSprite.drawMainBackground()
+            _logoSprite.drawControls()
+            _highScoreSprite.drawControls()
+            _startSprite.drawControls()
         }
         
-        _dpadSprite.drawControls()
-        _fireSprite.drawControls()
-        _healthBarSprite.drawControls()
-        if _model.playerHealth == 0 {
+        /* GAME OVER SCREEN */
+        if _model.gameOverMenu {
+            _backgroundSprite.drawBackground()
+            
+            for (index, sprite) in _sprites.enumerate().reverse() {
+                if sprite.remove && !sprite.isPlayer {
+                    _sprites.removeAtIndex(index)
+                }
+                else if sprite.position.x > 2 || sprite.position.x < -2 || sprite.position.y > 2 || sprite.position.y < -2 {
+                    _sprites.removeAtIndex(index)
+                }
+            }
+            
+            for sprite in _sprites {
+                sprite.draw()
+            }
+            
+            _healthBarSprite.drawControls()
+            _oneNumberSprite.drawControls()
+            _twoNumberSprite.drawControls()
+            _threeNumberSprite.drawControls()
+            _fourNumberSprite.drawControls()
             _gameoverSprite.drawControls()
-            _tapForMenuSprite.drawControls()
         }
-        _oneNumberSprite.drawControls()
-        _twoNumberSprite.drawControls()
-        _threeNumberSprite.drawControls()
-        _fourNumberSprite.drawControls()
+        
     }
     
     func detectCollisions() {
@@ -266,39 +286,24 @@ class GameViewController: GLKViewController {
     }
     
     func gameOver() {
+        _model.playingGame = false
+        _model.gameOverMenu = true
         _playerShip.remove = true
         _gameoverSprite.animation.texture = _gameover!.name
-        _gameoverSprite.animation.textureX = 178
-        _gameoverSprite.animation.textureY = 114
-        _gameoverSprite.animation.frameWidth = 178
-        _gameoverSprite.animation.frameHeight = 114
+        _gameoverSprite.animation.textureX = 471
+        _gameoverSprite.animation.textureY = 107
+        _gameoverSprite.animation.frameWidth = 471
+        _gameoverSprite.animation.frameHeight = 107
         _gameoverSprite.animation.rows = 1
         _gameoverSprite.animation.columns = 1
         _gameoverSprite.animation.frameX = 0
         _gameoverSprite.animation.frameY = 0
-        _gameoverSprite.width = 0.5
+        _gameoverSprite.width = 1
         _gameoverSprite.height = 0.5
         _gameoverSprite.position.x = 0
-        _gameoverSprite.position.y = 0.2
+        _gameoverSprite.position.y = 0
         
         _gameoverSprite.drawControls()
-        
-        _tapForMenuSprite.animation.texture = _tapForMenu!.name
-        _tapForMenuSprite.animation.textureX = 941
-        _tapForMenuSprite.animation.textureY = 128
-        _tapForMenuSprite.animation.frameWidth = 941
-        _tapForMenuSprite.animation.frameHeight = 128
-        _tapForMenuSprite.animation.rows = 1
-        _tapForMenuSprite.animation.columns = 1
-        _tapForMenuSprite.animation.frameX = 0
-        _tapForMenuSprite.animation.frameY = 0
-        _tapForMenuSprite.width = 0.5
-        _tapForMenuSprite.height = 0.2
-        _tapForMenuSprite.position.x = 0
-        _tapForMenuSprite.position.y = -0.2
-        
-        _tapForMenuSprite.drawControls()
-        
     }
     
     func asteroidHit(sprite: Sprite) {
@@ -361,23 +366,22 @@ class GameViewController: GLKViewController {
         super.touchesBegan(touches, withEvent: event)
         let touch: UITouch = touches.first!
         let touchPoint: CGPoint = touch.locationInView(self.view)
-        
-        if touchPoint.x > 27 && touchPoint.x < 74 && touchPoint.y > 488 && touchPoint.y < 536 {
+        if _model.playingGame && touchPoint.x > 27 && touchPoint.x < 74 && touchPoint.y > 488 && touchPoint.y < 536 {
             _model.playerFiring = true
         }
-        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
+        else if _model.playingGame && touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
             shipUp()
         }
-        else if touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
+        else if _model.playingGame && touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
             shipRight()
         }
-        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
+        else if _model.playingGame && touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
             shipDown()
         }
-        else if touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
+        else if _model.playingGame && touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
             shipLeft()
         }
-        else {
+        else if _model.playingGame {
             shipStop()
         }
         
@@ -388,22 +392,22 @@ class GameViewController: GLKViewController {
         let touch: UITouch = touches.first!
         let touchPoint: CGPoint = touch.locationInView(self.view)
         
-        if touchPoint.x > 27 && touchPoint.x < 74 && touchPoint.y > 488 && touchPoint.y < 536 {
+        if _model.playingGame && touchPoint.x > 27 && touchPoint.x < 74 && touchPoint.y > 488 && touchPoint.y < 536 {
             _model.playerFiring = true
         }
-        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
+        else if _model.playingGame && touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 469 && touchPoint.y < 497 {
             shipUp()
         }
-        else if touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
+        else if _model.playingGame && touchPoint.x > 283 && touchPoint.x < 307 && touchPoint.y > 501 && touchPoint.y < 525 {
             shipRight()
         }
-        else if touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
+        else if _model.playingGame && touchPoint.x > 253 && touchPoint.x < 279 && touchPoint.y > 529 && touchPoint.y < 556 {
             shipDown()
         }
-        else if touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
+        else if _model.playingGame && touchPoint.x > 223 && touchPoint.x < 250 && touchPoint.y > 500 && touchPoint.y < 525 {
             shipLeft()
         }
-        else {
+        else if _model.playingGame {
             _dpadSprite.animation.texture = _dpad!.name
             _fireSprite.animation.texture = _buttonUnpressed!.name
             shipStop()
@@ -411,10 +415,30 @@ class GameViewController: GLKViewController {
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        _dpadSprite.animation.texture = _dpad!.name
-        _fireSprite.animation.texture = _buttonUnpressed!.name
-        _model.playerFiring = false
-        shipStop()
+        super.touchesBegan(touches, withEvent: event)
+        let touch: UITouch = touches.first!
+        let touchPoint: CGPoint = touch.locationInView(self.view)
+        
+        if _model.playingGame {
+            _dpadSprite.animation.texture = _dpad!.name
+            _fireSprite.animation.texture = _buttonUnpressed!.name
+            _model.playerFiring = false
+            shipStop()
+        }
+        
+        /* SWITCH TO GAME MODE */
+        if _model.displayGameScreen && touchPoint.x > 77 && touchPoint.x < 239 && touchPoint.y > 344 && touchPoint.y < 387 {
+            _model.playingGame = true
+            _model.displayGameScreen = false
+            setupGame()
+        }
+        
+        /* SWITCH TO GAME MENU */
+        if _model.gameOverMenu && _model.gameOverDelay > 10 {
+            _model.displayGameScreen = true
+            _model.gameOverMenu = false
+            restartGame()
+        }
     }
     
     func shipStop() {
@@ -675,6 +699,18 @@ class GameViewController: GLKViewController {
         _fourNumberSprite.position.y = 0.87
     }
     
+    func restartGame() {
+        _sprites = [Sprite]()
+        _model.gameOverMenu = false
+        _model.gameOverDelay = 0
+        _model.level = 1
+        _model.playerHealth = 5
+        _model.playerScore = 0
+        _model.asteroidFrequency = 20
+        updateScore()
+        _playerShip = Sprite()
+    }
+    
     func updateSpritesLocations() {
         for sprite in _sprites {
             if sprite !== _playerShip {
@@ -735,6 +771,112 @@ class GameViewController: GLKViewController {
         _twoNumberSprite.animation.frameX = Double((36 * twoDigit) + 2)
         _threeNumberSprite.animation.frameX = Double((36 * threeDigit) + 2)
         _fourNumberSprite.animation.frameX = Double((36 * fourDigit) + 2)
+    }
+    
+    func loadSprites() {
+        _buttonUnpressed = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_unpressed")!.CGImage!, options: nil)
+        _button = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "button_pressed")!.CGImage!, options: nil)
+        _asteroid = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "asteroid")!.CGImage!, options: nil)
+        _explosion = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "explosion")!.CGImage!, options: nil)
+        _gameover = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "gameover")!.CGImage!, options: nil)
+        _healthBar = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "healthbar")!.CGImage!, options: nil)
+        _numbers = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "numbers")!.CGImage!, options: nil)
+        _dpad = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad")!.CGImage!, options: nil)
+        _dpadUp = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_up")!.CGImage!, options: nil)
+        _dpadRight = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_right")!.CGImage!, options: nil)
+        _dpadDown = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_down")!.CGImage!, options: nil)
+        _dpadLeft = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "dpad_left")!.CGImage!, options: nil)
+        _ship = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "ship")!.CGImage!, options: nil)
+        _background = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "background.jpg")!.CGImage!, options: nil)
+        _highScore = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "high_scores")!.CGImage!, options: nil)
+        _logo = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "darius")!.CGImage!, options: nil)
+        _backgroundMain = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "mainscreen_background.jpg")!.CGImage!, options: nil)
+        _startGame = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "play_game")!.CGImage!, options: nil)
+        _highScore = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "high_scores")!.CGImage!, options: nil)
+    }
+    
+    
+    func constructLogoSprite() {
+        _logoSprite.animation.texture = _logo!.name
+        _logoSprite.animation.textureX = 256
+        _logoSprite.animation.textureY = 74
+        _logoSprite.animation.frameHeight = 74
+        _logoSprite.animation.frameWidth = 256
+        _logoSprite.animation.rows = 1
+        _logoSprite.animation.columns = 1
+        _logoSprite.animation.frameX = 0
+        _logoSprite.animation.frameY = 0
+        _logoSprite.width = 1
+        _logoSprite.height = 0.8
+        _logoSprite.position.x = 0
+        _logoSprite.position.y = 0.3
+        _logoSprite.drawControls()
+    }
+    
+    func constructBackgroundMainSprite() {
+        _backgroundMainSprite.animation.texture = _backgroundMain!.name
+        _backgroundMainSprite.animation.textureX = 1280
+        _backgroundMainSprite.animation.textureY = 1280
+        _backgroundMainSprite.animation.frameHeight = 1000
+        _backgroundMainSprite.animation.frameWidth = 1000
+        _backgroundMainSprite.animation.frameX = 640
+        _backgroundMainSprite.animation.frameY = 640
+        _backgroundMainSprite.width = 1.3
+        _backgroundMainSprite.height = 2
+        _backgroundMainSprite.drawControls()
+    }
+    
+    func constructStartGameSprite() {
+        _startSprite.animation.texture = _startGame!.name
+        _startSprite.animation.textureX = 256
+        _startSprite.animation.textureY = 74
+        _startSprite.animation.frameHeight = 74
+        _startSprite.animation.frameWidth = 256
+        _startSprite.animation.rows = 1
+        _startSprite.animation.columns = 1
+        _startSprite.animation.frameX = 0
+        _startSprite.animation.frameY = 0
+        _startSprite.width = 0.7
+        _startSprite.height = 0.3
+        _startSprite.position.x = 0
+        _startSprite.position.y = -0.3
+        _startSprite.drawControls()
+    }
+    
+    func constructHighScoreSprite() {
+        _highScoreSprite.animation.texture = _highScore!.name
+        _highScoreSprite.animation.textureX = 256
+        _highScoreSprite.animation.textureY = 74
+        _highScoreSprite.animation.frameHeight = 74
+        _highScoreSprite.animation.frameWidth = 256
+        _highScoreSprite.animation.rows = 1
+        _highScoreSprite.animation.columns = 1
+        _highScoreSprite.animation.frameX = 0
+        _highScoreSprite.animation.frameY = 0
+        _highScoreSprite.width = 0.7
+        _highScoreSprite.height = 0.3
+        _highScoreSprite.position.x = 0
+        _highScoreSprite.position.y = -0.5
+        _highScoreSprite.drawControls()
     }
 }
 

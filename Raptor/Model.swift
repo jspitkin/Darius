@@ -9,12 +9,12 @@
 import GLKit
 
 class Model {
-    var level: Int = 2
+    var level: Int = 1
     
     var asteroidFrequency: Int = 20
     var currentAsteroidFrequency: Int = 0
     
-    var enemyFrequency: Int = 20
+    var enemyFrequency: Int = 40
     var currentEnemyFrequency: Int = 0
     
     let firingFrequency: Int = 5
@@ -33,5 +33,10 @@ class Model {
     var gameOverDelay: Int = 0
     
     var asteroidsDestroyed: Int = 0
+    var shipsDestroyed: Int = 0
+    
+    var enemyBulletVelocity: Double = -0.6
+    var asteroidMaxVelocity: Double = 0.5
+    var asteroidMinVelocity: Double = 0.15
  }
 

@@ -38,6 +38,8 @@ class GameViewController: GLKViewController {
     private var _gameover: GLKTextureInfo? = nil
     private var _numbers: GLKTextureInfo? = nil
     private var _enemyShip: GLKTextureInfo? = nil
+    private var _mars: GLKTextureInfo? = nil
+    private var _biomech: GLKTextureInfo? = nil
     
     private var _logoSprite = Sprite()
     private var _backgroundMainSprite = Sprite()
@@ -97,14 +99,33 @@ class GameViewController: GLKViewController {
             
             if _model.level == 1 {
                 spawnRandomAsteroids()
+                if _model.asteroidsDestroyed > 5 {
+                    _model.level = 2
+                }
             }
             else if _model.level == 2 {
+                 _backgroundSprite.animation.texture = _mars!.name
                 spawnEnemyShips()
                 enemyFire()
+                
+                if _model.shipsDestroyed > 3 {
+                    _model.level = 3
+                }
             }
             else if _model.level == 3 {
+                if _model.shipsDestroyed + _model.asteroidsDestroyed > 5 {
+                    _model.shipsDestroyed = 0
+                    _model.asteroidsDestroyed = 0
+                    _model.enemyBulletVelocity -= 0.2
+                    _model.asteroidMinVelocity += 0.1
+                    _model.asteroidMaxVelocity += 0.1
+                    print("upgraded")
+                }
+                
+                _backgroundSprite.animation.texture = _biomech!.name
                 spawnRandomAsteroids()
                 spawnEnemyShips()
+                enemyFire()
             }
             
             // Keep ship in bounds of the screen
@@ -243,6 +264,7 @@ class GameViewController: GLKViewController {
                 playerHit(sprite)
             }
         }
+    }
     
     func playerHit(sprite: Sprite) {
         _model.playerHealth--;
@@ -282,9 +304,10 @@ class GameViewController: GLKViewController {
     }
     
     func gameOver() {
-        _model.playingGame = false
         _model.gameOverMenu = true
+        _model.playingGame = false
         _playerShip.remove = true
+        _backgroundSprite.animation.texture = _background!.name
         _gameoverSprite.animation.texture = _gameover!.name
         _gameoverSprite.animation.textureX = 471
         _gameoverSprite.animation.textureY = 107
@@ -323,7 +346,12 @@ class GameViewController: GLKViewController {
             deathSprite.position.x = deathSprite.initialPosition.x
             deathSprite.velocity.x = 0.0
             deathSprite.velocity.y = 0.0
-            
+            if sprite.isEnemy {
+                _model.asteroidsDestroyed++
+            }
+            if sprite.isSpaceship {
+                _model.shipsDestroyed++
+            }
             sprite.remove = true
             _sprites.append(deathSprite)
         }
@@ -575,13 +603,38 @@ class GameViewController: GLKViewController {
             sprite.position.y = sprite.initialPosition.y
             sprite.position.x = sprite.initialPosition.x
             sprite.velocity.x = 0.0
-            sprite.velocity.y = -1 * ((drand48() * (0.5 - 0.15)) + 0.15)
+            sprite.velocity.y = -1 * ((drand48() * (_model.asteroidMaxVelocity - _model.asteroidMinVelocity)) + _model.asteroidMinVelocity)
+            sprite.isSpaceship = true
+            
+            _sprites.append(sprite)
+        }
+        else if _model.currentEnemyFrequency == _model.enemyFrequency/2 {
+            let sprite: Sprite = Sprite()
+            _model.currentEnemyFrequency++;
+            sprite.animation.texture = _enemyShip!.name
+            sprite.animation.textureX = 348
+            sprite.animation.textureY = 250
+            sprite.animation.frameHeight = 30
+            sprite.animation.frameWidth = 53
+            sprite.animation.rows = 2
+            sprite.animation.columns = 6
+            sprite.animation.frameX = 5
+            sprite.animation.frameY = 5
+            sprite.animation.framesPerAnimation = 1
+            sprite.width = 0.15
+            sprite.height = 0.15
+            sprite.initialPosition.y = 0.8
+            sprite.initialPosition.x = -0.7
+            sprite.position.y = sprite.initialPosition.y
+            sprite.position.x = sprite.initialPosition.x
+            sprite.velocity.x = 0.5
+            sprite.velocity.y = 0
             sprite.isSpaceship = true
             
             _sprites.append(sprite)
         }
         else {
-            _model.currentEnemyFrequency++;
+            _model.currentEnemyFrequency++
         }
 
     }
@@ -610,7 +663,7 @@ class GameViewController: GLKViewController {
                     bullet.position.y = sprite.initialPosition.y
                     bullet.position.x = sprite.initialPosition.x
                     bullet.velocity.x = 0.0
-                    bullet.velocity.y = -0.8
+                    bullet.velocity.y = _model.enemyBulletVelocity
                     bullet.isEnemyBullet = true
                     _sprites.append(bullet)
                 }
@@ -773,6 +826,9 @@ class GameViewController: GLKViewController {
         _model.playerHealth = 5
         _model.playerScore = 0
         _model.asteroidFrequency = 20
+        _model.level = 1
+        _model.asteroidsDestroyed = 0
+        _model.shipsDestroyed = 0
         updateScore()
         _playerShip = Sprite()
     }
@@ -880,6 +936,10 @@ class GameViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "high_scores")!.CGImage!, options: nil)
         _enemyShip = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "enemy_ship")!.CGImage!, options: nil)
+        _mars = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "mars.jpg")!.CGImage!, options: nil)
+        _biomech = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "biomech.jpg")!.CGImage!, options: nil)
     }
     
     

@@ -30,6 +30,7 @@ class Model {
     var playingGame: Bool = false
     var displayGameScreen: Bool = true
     var gameOverMenu: Bool = false
+    var highScoresScreen: Bool = false
     var gameOverDelay: Int = 0
     
     var asteroidsDestroyed: Int = 0

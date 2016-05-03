@@ -22,6 +22,9 @@ class GameViewController: GLKViewController {
     private var _threeNumberSprite = Sprite()
     private var _fourNumberSprite = Sprite()
     private var _tapForMenuSprite = Sprite()
+    private var _scoresSprite = Sprite()
+    private var _highScoreBackgroundSprite = Sprite()
+    private var _highScoreBackSprite = Sprite()
     
     private var _dpad: GLKTextureInfo? = nil
     private var _dpadUp: GLKTextureInfo? = nil
@@ -40,6 +43,9 @@ class GameViewController: GLKViewController {
     private var _enemyShip: GLKTextureInfo? = nil
     private var _mars: GLKTextureInfo? = nil
     private var _biomech: GLKTextureInfo? = nil
+    private var _scores: GLKTextureInfo? = nil
+    private var _highScoreBackground: GLKTextureInfo? = nil
+    private var _highScoreBack: GLKTextureInfo? = nil
     
     private var _logoSprite = Sprite()
     private var _backgroundMainSprite = Sprite()
@@ -87,6 +93,12 @@ class GameViewController: GLKViewController {
         constructScoreBar()
     }
     
+    private func setupScoresScreen() {
+        glClearColor(0.0, 0.0, 0.0, 1.0)
+        
+        constructHighScoreScreen()
+    }
+    
     // Game loop
     func update() {
         /* GAME SCREEN */
@@ -99,7 +111,7 @@ class GameViewController: GLKViewController {
             
             if _model.level == 1 {
                 spawnRandomAsteroids()
-                if _model.asteroidsDestroyed > 5 {
+                if _model.asteroidsDestroyed >= 5 {
                     _model.level = 2
                 }
             }
@@ -108,7 +120,7 @@ class GameViewController: GLKViewController {
                 spawnEnemyShips()
                 enemyFire()
                 
-                if _model.shipsDestroyed > 3 {
+                if _model.shipsDestroyed >= 5 {
                     _model.level = 3
                 }
             }
@@ -149,6 +161,11 @@ class GameViewController: GLKViewController {
         /* GAME OVER SCREEN */
         if _model.gameOverMenu {
             _model.gameOverDelay++;
+        }
+        
+        /* HIGH SCORES SCREEN */
+        if _model.highScoresScreen {
+            setupScoresScreen()
         }
     }
     
@@ -218,6 +235,13 @@ class GameViewController: GLKViewController {
             _threeNumberSprite.drawControls()
             _fourNumberSprite.drawControls()
             _gameoverSprite.drawControls()
+        }
+        
+        /* HIGH SCORES SCREEN */
+        if _model.highScoresScreen {
+            _highScoreBackgroundSprite.drawControls()
+            _scoresSprite.drawControls()
+            _highScoreBackSprite.drawControls()
         }
         
     }
@@ -465,6 +489,22 @@ class GameViewController: GLKViewController {
             _model.gameOverMenu = false
             restartGame()
         }
+        
+        /* SWITCH TO GAME MENU */
+        if _model.highScoresScreen && touchPoint.x > 68 && touchPoint.x < 242 && touchPoint.y > 462 && touchPoint.y < 502 {
+            _model.highScoresScreen = false
+            _model.displayGameScreen = false
+            _model.displayGameScreen = true
+            restartGame()
+        }
+        
+        /* SWITCH TO HIGH SCORES */
+        if _model.displayGameScreen && touchPoint.x > 77 && touchPoint.x < 239 && touchPoint.y > 404 && touchPoint.y < 441 {
+            _model.highScoresScreen = true
+            _model.displayGameScreen = false
+            setupScoresScreen()
+        }
+        
     }
     
     func shipStop() {
@@ -673,150 +713,6 @@ class GameViewController: GLKViewController {
             _model.currentEnemyFiringFrequency++
         }
     }
-
-    
-    func constructBackgroundSprite() {
-        _backgroundSprite.animation.texture = _background!.name
-        _backgroundSprite.animation.textureX = 1080
-        _backgroundSprite.animation.textureY = 1920
-        _backgroundSprite.animation.frameHeight = 500
-        _backgroundSprite.animation.frameWidth = 500
-        _backgroundSprite.animation.frameX = 0
-        _backgroundSprite.animation.frameY = 0
-        _backgroundSprite.width = 1.3
-        _backgroundSprite.height = 2
-    }
-    
-    func constructPlayerShipSprite() {
-        _playerShip.animation.texture = _ship!.name
-        _playerShip.animation.textureX = 116
-        _playerShip.animation.textureY = 345
-        _playerShip.animation.frameHeight = 36
-        _playerShip.animation.frameWidth = 39
-        _playerShip.animation.rows = 0
-        _playerShip.animation.columns = 0
-        _playerShip.animation.frameX = 39
-        _playerShip.animation.frameY = 0
-        _playerShip.animation.framesPerAnimation = 1
-        _playerShip.width = 0.15
-        _playerShip.height = 0.15
-        _playerShip.initialPosition.y = -0.75
-        _playerShip.initialPosition.x = -0.05
-        _playerShip.position.y = _playerShip.initialPosition.y
-        _playerShip.position.x = _playerShip.initialPosition.x
-        _playerShip.velocity.x = 0.0
-        _playerShip.velocity.y = 0.0
-        _playerShip.isPlayer = true
-        
-        _sprites.append(_playerShip)
-    }
-    
-    func constructDirectionalPad() {
-        _dpadSprite.animation.texture = _dpad!.name
-        _dpadSprite.animation.textureX = 280
-        _dpadSprite.animation.textureY = 280
-        _dpadSprite.animation.frameHeight = 280
-        _dpadSprite.animation.frameWidth = 280
-        _dpadSprite.animation.rows = 1
-        _dpadSprite.animation.columns = 1
-        _dpadSprite.animation.frameX = 0
-        _dpadSprite.animation.frameY = 0
-        _dpadSprite.width = 0.3
-        _dpadSprite.height = 0.3
-        _dpadSprite.position.x = 0.37
-        _dpadSprite.position.y = -0.8
-        
-        _dpadSprite.drawControls()
-    }
-    
-    func constructFireButton() {
-        _fireSprite.animation.texture = _buttonUnpressed!.name
-        _fireSprite.animation.textureX = 128
-        _fireSprite.animation.textureY = 128
-        _fireSprite.animation.frameHeight = 280
-        _fireSprite.animation.frameWidth = 280
-        _fireSprite.animation.rows = 1
-        _fireSprite.animation.columns = 1
-        _fireSprite.animation.frameX = 0
-        _fireSprite.animation.frameY = 0
-        _fireSprite.width = 0.4
-        _fireSprite.height = 0.4
-        _fireSprite.position.x = -0.28
-        _fireSprite.position.y = -0.9
-        
-        _fireSprite.drawControls()
-
-    }
-    
-    func constructHealthBar() {
-        
-        _healthBarSprite.animation.texture = _healthBar!.name
-        _healthBarSprite.animation.textureX = 516
-        _healthBarSprite.animation.textureY = 46
-        _healthBarSprite.animation.frameHeight = 46
-        _healthBarSprite.animation.frameWidth = 516
-        _healthBarSprite.animation.rows = 1
-        _healthBarSprite.animation.columns = 1
-        _healthBarSprite.animation.frameX = 0
-        _healthBarSprite.animation.frameY = 0
-        _healthBarSprite.width = 0.5
-        _healthBarSprite.height = 0.07
-        _healthBarSprite.position.x = -0.05
-        _healthBarSprite.position.y = -0.9
-        
-        _healthBarSprite.drawControls()
-    }
-    
-    func constructScoreBar() {
-        _oneNumberSprite.animation.texture = _numbers!.name
-        _twoNumberSprite.animation.texture = _numbers!.name
-        _threeNumberSprite.animation.texture = _numbers!.name
-        _fourNumberSprite.animation.texture = _numbers!.name
-        
-        _oneNumberSprite.animation.textureX = 360
-        _oneNumberSprite.animation.textureY = 36
-        _oneNumberSprite.animation.frameX = 2
-        _oneNumberSprite.animation.frameY = 6
-        _oneNumberSprite.width = 0.1
-        _oneNumberSprite.height = 0.1
-        _oneNumberSprite.animation.frameWidth = 34
-        _oneNumberSprite.animation.frameHeight = 27
-        _oneNumberSprite.position.x = -3.0
-        _oneNumberSprite.position.y = 0.87
-        
-        _twoNumberSprite.animation.textureX = 360
-        _twoNumberSprite.animation.textureY = 36
-        _twoNumberSprite.animation.frameX = 2
-        _twoNumberSprite.animation.frameY = 6
-        _twoNumberSprite.width = 0.1
-        _twoNumberSprite.height = 0.1
-        _twoNumberSprite.animation.frameWidth = 34
-        _twoNumberSprite.animation.frameHeight = 27
-        _twoNumberSprite.position.x = -3.0
-        _twoNumberSprite.position.y = 0.87
-        
-        _threeNumberSprite.animation.textureX = 360
-        _threeNumberSprite.animation.textureY = 36
-        _threeNumberSprite.animation.frameX = 2
-        _threeNumberSprite.animation.frameY = 6
-        _threeNumberSprite.width = 0.1
-        _threeNumberSprite.height = 0.1
-        _threeNumberSprite.animation.frameWidth = 34
-        _threeNumberSprite.animation.frameHeight = 27
-        _threeNumberSprite.position.x = -3.0
-        _threeNumberSprite.position.y = 0.87
-        
-        _fourNumberSprite.animation.textureX = 360
-        _fourNumberSprite.animation.textureY = 36
-        _fourNumberSprite.animation.frameX = 2
-        _fourNumberSprite.animation.frameY = 6
-        _fourNumberSprite.animation.frameWidth = 34
-        _fourNumberSprite.animation.frameHeight = 27
-        _fourNumberSprite.width = 0.1
-        _fourNumberSprite.height = 0.1
-        _fourNumberSprite.position.x = -3.0
-        _fourNumberSprite.position.y = 0.87
-    }
     
     func restartGame() {
         _sprites = [Sprite]()
@@ -940,6 +836,12 @@ class GameViewController: GLKViewController {
             GLKTextureLoader.textureWithCGImage(UIImage(named: "mars.jpg")!.CGImage!, options: nil)
         _biomech = try!
             GLKTextureLoader.textureWithCGImage(UIImage(named: "biomech.jpg")!.CGImage!, options: nil)
+        _scores = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "scores")!.CGImage!, options: nil)
+        _highScoreBackground = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "highscore_background.jpg")!.CGImage!, options: nil)
+        _highScoreBack = try!
+            GLKTextureLoader.textureWithCGImage(UIImage(named: "back")!.CGImage!, options: nil)
     }
     
     
@@ -1005,6 +907,197 @@ class GameViewController: GLKViewController {
         _highScoreSprite.position.x = 0
         _highScoreSprite.position.y = -0.5
         _highScoreSprite.drawControls()
+    }
+    
+    func constructHighScoreScreen() {
+        _scoresSprite.animation.texture = _scores!.name
+        _scoresSprite.animation.textureX = 551
+        _scoresSprite.animation.textureY = 79
+        _scoresSprite.animation.frameHeight = 79
+        _scoresSprite.animation.frameWidth = 551
+        _scoresSprite.animation.rows = 1
+        _scoresSprite.animation.columns = 1
+        _scoresSprite.animation.frameX = 0
+        _scoresSprite.animation.frameY = 0
+        _scoresSprite.width = 1
+        _scoresSprite.height = 0.5
+        _scoresSprite.position.x = 0
+        _scoresSprite.position.y = 0.7
+        _scoresSprite.drawControls()
+        
+        _highScoreBackgroundSprite.animation.texture = _highScoreBackground!.name
+        _highScoreBackgroundSprite.animation.textureX = 2560
+        _highScoreBackgroundSprite.animation.textureY = 1580
+        _highScoreBackgroundSprite.animation.frameHeight = 1580
+        _highScoreBackgroundSprite.animation.frameWidth = 2560
+        _highScoreBackgroundSprite.animation.rows = 1
+        _highScoreBackgroundSprite.animation.columns = 1
+        _highScoreBackgroundSprite.animation.frameX = 0
+        _highScoreBackgroundSprite.animation.frameY = 0
+        _highScoreBackgroundSprite.width = 4
+        _highScoreBackgroundSprite.height = 4
+        _highScoreBackgroundSprite.position.x = 0
+        _highScoreBackgroundSprite.position.y = 0
+        _highScoreBackgroundSprite.drawControls()
+        
+        _highScoreBackSprite.animation.texture = _highScoreBack!.name
+        _highScoreBackSprite.animation.textureX = 263
+        _highScoreBackSprite.animation.textureY = 79
+        _highScoreBackSprite.animation.frameHeight = 79
+        _highScoreBackSprite.animation.frameWidth = 263
+        _highScoreBackSprite.animation.rows = 1
+        _highScoreBackSprite.animation.columns = 1
+        _highScoreBackSprite.animation.frameX = 0
+        _highScoreBackSprite.animation.frameY = 0
+        _highScoreBackSprite.width = 1
+        _highScoreBackSprite.height = 0.2
+        _highScoreBackSprite.position.x = 0
+        _highScoreBackSprite.position.y = -0.7
+        _highScoreBackSprite.drawControls()
+    }
+    
+    
+    func constructBackgroundSprite() {
+        _backgroundSprite.animation.texture = _background!.name
+        _backgroundSprite.animation.textureX = 1080
+        _backgroundSprite.animation.textureY = 1920
+        _backgroundSprite.animation.frameHeight = 500
+        _backgroundSprite.animation.frameWidth = 500
+        _backgroundSprite.animation.frameX = 0
+        _backgroundSprite.animation.frameY = 0
+        _backgroundSprite.width = 1.3
+        _backgroundSprite.height = 2
+    }
+    
+    func constructPlayerShipSprite() {
+        _playerShip.animation.texture = _ship!.name
+        _playerShip.animation.textureX = 116
+        _playerShip.animation.textureY = 345
+        _playerShip.animation.frameHeight = 36
+        _playerShip.animation.frameWidth = 39
+        _playerShip.animation.rows = 0
+        _playerShip.animation.columns = 0
+        _playerShip.animation.frameX = 39
+        _playerShip.animation.frameY = 0
+        _playerShip.animation.framesPerAnimation = 1
+        _playerShip.width = 0.15
+        _playerShip.height = 0.15
+        _playerShip.initialPosition.y = -0.75
+        _playerShip.initialPosition.x = -0.05
+        _playerShip.position.y = _playerShip.initialPosition.y
+        _playerShip.position.x = _playerShip.initialPosition.x
+        _playerShip.velocity.x = 0.0
+        _playerShip.velocity.y = 0.0
+        _playerShip.isPlayer = true
+        
+        _sprites.append(_playerShip)
+    }
+    
+    func constructDirectionalPad() {
+        _dpadSprite.animation.texture = _dpad!.name
+        _dpadSprite.animation.textureX = 280
+        _dpadSprite.animation.textureY = 280
+        _dpadSprite.animation.frameHeight = 280
+        _dpadSprite.animation.frameWidth = 280
+        _dpadSprite.animation.rows = 1
+        _dpadSprite.animation.columns = 1
+        _dpadSprite.animation.frameX = 0
+        _dpadSprite.animation.frameY = 0
+        _dpadSprite.width = 0.3
+        _dpadSprite.height = 0.3
+        _dpadSprite.position.x = 0.37
+        _dpadSprite.position.y = -0.8
+        
+        _dpadSprite.drawControls()
+    }
+    
+    func constructFireButton() {
+        _fireSprite.animation.texture = _buttonUnpressed!.name
+        _fireSprite.animation.textureX = 128
+        _fireSprite.animation.textureY = 128
+        _fireSprite.animation.frameHeight = 280
+        _fireSprite.animation.frameWidth = 280
+        _fireSprite.animation.rows = 1
+        _fireSprite.animation.columns = 1
+        _fireSprite.animation.frameX = 0
+        _fireSprite.animation.frameY = 0
+        _fireSprite.width = 0.4
+        _fireSprite.height = 0.4
+        _fireSprite.position.x = -0.28
+        _fireSprite.position.y = -0.9
+        
+        _fireSprite.drawControls()
+        
+    }
+    
+    func constructHealthBar() {
+        
+        _healthBarSprite.animation.texture = _healthBar!.name
+        _healthBarSprite.animation.textureX = 516
+        _healthBarSprite.animation.textureY = 46
+        _healthBarSprite.animation.frameHeight = 46
+        _healthBarSprite.animation.frameWidth = 516
+        _healthBarSprite.animation.rows = 1
+        _healthBarSprite.animation.columns = 1
+        _healthBarSprite.animation.frameX = 0
+        _healthBarSprite.animation.frameY = 0
+        _healthBarSprite.width = 0.5
+        _healthBarSprite.height = 0.07
+        _healthBarSprite.position.x = -0.05
+        _healthBarSprite.position.y = -0.9
+        
+        _healthBarSprite.drawControls()
+    }
+    
+    func constructScoreBar() {
+        _oneNumberSprite.animation.texture = _numbers!.name
+        _twoNumberSprite.animation.texture = _numbers!.name
+        _threeNumberSprite.animation.texture = _numbers!.name
+        _fourNumberSprite.animation.texture = _numbers!.name
+        
+        _oneNumberSprite.animation.textureX = 360
+        _oneNumberSprite.animation.textureY = 36
+        _oneNumberSprite.animation.frameX = 2
+        _oneNumberSprite.animation.frameY = 6
+        _oneNumberSprite.width = 0.1
+        _oneNumberSprite.height = 0.1
+        _oneNumberSprite.animation.frameWidth = 34
+        _oneNumberSprite.animation.frameHeight = 27
+        _oneNumberSprite.position.x = -3.0
+        _oneNumberSprite.position.y = 0.87
+        
+        _twoNumberSprite.animation.textureX = 360
+        _twoNumberSprite.animation.textureY = 36
+        _twoNumberSprite.animation.frameX = 2
+        _twoNumberSprite.animation.frameY = 6
+        _twoNumberSprite.width = 0.1
+        _twoNumberSprite.height = 0.1
+        _twoNumberSprite.animation.frameWidth = 34
+        _twoNumberSprite.animation.frameHeight = 27
+        _twoNumberSprite.position.x = -3.0
+        _twoNumberSprite.position.y = 0.87
+        
+        _threeNumberSprite.animation.textureX = 360
+        _threeNumberSprite.animation.textureY = 36
+        _threeNumberSprite.animation.frameX = 2
+        _threeNumberSprite.animation.frameY = 6
+        _threeNumberSprite.width = 0.1
+        _threeNumberSprite.height = 0.1
+        _threeNumberSprite.animation.frameWidth = 34
+        _threeNumberSprite.animation.frameHeight = 27
+        _threeNumberSprite.position.x = -3.0
+        _threeNumberSprite.position.y = 0.87
+        
+        _fourNumberSprite.animation.textureX = 360
+        _fourNumberSprite.animation.textureY = 36
+        _fourNumberSprite.animation.frameX = 2
+        _fourNumberSprite.animation.frameY = 6
+        _fourNumberSprite.animation.frameWidth = 34
+        _fourNumberSprite.animation.frameHeight = 27
+        _fourNumberSprite.width = 0.1
+        _fourNumberSprite.height = 0.1
+        _fourNumberSprite.position.x = -3.0
+        _fourNumberSprite.position.y = 0.87
     }
 }
 
